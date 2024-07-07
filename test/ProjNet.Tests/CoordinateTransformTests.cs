@@ -17,7 +17,7 @@ namespace ProjNET.Tests
         {
             Verbose = true;
         }
-       
+
         [Test]
         public void TestTransformListOfCoordinates()
         {
@@ -98,7 +98,7 @@ namespace ProjNET.Tests
             var pSouthPole = pCoordSysFactory.CreateFromWkt(strSouthPole);
             Assert.IsNotNull(pSouthPole);
         }
-        
+
         [Test]
 		public void TestAlbersProjection()
 		{
@@ -516,7 +516,7 @@ namespace ProjNET.Tests
 			var gcsKrovak = CoordinateSystemFactory.CreateGeographicCoordinateSystem("Bessel 1840", AngularUnit.Degrees, datum,
 				PrimeMeridian.Greenwich, new AxisInfo("Lon", AxisOrientationEnum.East),
 				new AxisInfo("Lat", AxisOrientationEnum.North));
-            
+
 			var parameters = new List<ProjectionParameter>(5)
 			                     {
 			                         new ProjectionParameter("latitude_of_center", 49.5),
@@ -766,7 +766,7 @@ namespace ProjNET.Tests
             //var expected = new[] { 708066.19058, 1151461.51413 };
             double[] expected = new[] { 708066.19057935325, 1151426.4460563776 };
 
-			
+
 			double[] p1 = trans.MathTransform.Transform(p0);
 			double[] p2 = trans.MathTransform.Inverse().Transform(p1);
 
@@ -804,15 +804,15 @@ namespace ProjNET.Tests
             var csTarget = CoordinateSystemFactory.CreateFromWkt(
                 "PROJCS[\"DHDN / Soldner Berlin\",GEOGCS[\"DHDN\",DATUM[\"Deutsches_Hauptdreiecksnetz\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128,AUTHORITY[\"EPSG\",\"7004\"]],TOWGS84[598.1,73.7,418.2,0.202,0.045,-2.455,6.7],AUTHORITY[\"EPSG\",\"6314\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4314\"]],PROJECTION[\"Cassini_Soldner\"],PARAMETER[\"latitude_of_origin\",52.41864827777778],PARAMETER[\"central_meridian\",13.62720366666667],PARAMETER[\"false_easting\",40000],PARAMETER[\"false_northing\",10000],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"x\",NORTH],AXIS[\"y\",EAST],AUTHORITY[\"EPSG\",\"3068\"]]");
 
-            Test("CassiniSoldner", csSource, csTarget, 
-                 new[] { 13.408055555556, 52.518611111111 }, 
+            Test("CassiniSoldner", csSource, csTarget,
+                 new[] { 13.408055555556, 52.518611111111 },
                  new[] { 25244.540, 21300.969 }, 0.3, 1.0E-5);
 
             /*
             var ct = CoordinateTransformationFactory.CreateFromCoordinateSystems(csSource, csTarget);
             var pgeo = new[] {13.408055555556, 52.518611111111};
             var pcs = ct.MathTransform.Transform(pgeo);
-            
+
             //Evaluated using DotSpatial.Projections
             var pcsExpected = new[] {25244.540, 21300.969};
 
@@ -891,7 +891,7 @@ namespace ProjNET.Tests
             // 3) Scale: 1.0
 
             //TODO MathTransformFactory fac = new MathTransformFactory ();
-            double[,] matrix = new double[,] {{0.883485346527455, -0.468458794848877, 3455869.17937689}, 
+            double[,] matrix = new double[,] {{0.883485346527455, -0.468458794848877, 3455869.17937689},
                                               {0.468458794848877, 0.883485346527455, 5478710.88035753},
                                               {0.0 , 0.0, 1},};
             var mt = new AffineTransform (matrix);
@@ -925,7 +925,7 @@ namespace ProjNET.Tests
             // 3) Scale: 1.0
 
             //TODO MathTransformFactory fac = new MathTransformFactory ();
-            double[,] matrix = new double[,] {{0.883485346527455, -0.468458794848877, 3455869.17937689}, 
+            double[,] matrix = new double[,] {{0.883485346527455, -0.468458794848877, 3455869.17937689},
                                               {0.468458794848877, 0.883485346527455, 5478710.88035753},
                                               {0.0 , 0.0, 1},};
             var mt = new AffineTransform (matrix);
@@ -1127,6 +1127,34 @@ namespace ProjNET.Tests
 
             var @delegate2 = new TestDelegate(() => trans2.MathTransform.Transform(new[] { 180.0, 0.0 }));
             Assert.Throws<ArgumentOutOfRangeException>(@delegate2);
+        }
+
+        [Test]
+        public void TestTransformEPSG28992_to_from_WGS84()
+        {
+            // Amersfoort OLV Church in 28992           => +155 000 m +463 000 m
+            //                       in WGS84 / 4326    => 	N52° 09.310' E005° 23.232'   /  	N52.15517° E005.38721°
+
+            var ctfac = new CoordinateTransformationFactory();
+
+            string wkt28992 = "PROJCS[\"Amersfoort / RD New\",GEOGCS[\"Amersfoort\",DATUM[\"Amersfoort\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128,AUTHORITY[\"EPSG\",\"7004\"]],AUTHORITY[\"EPSG\",\"6289\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4289\"]],PROJECTION[\"Oblique_Stereographic\"],PARAMETER[\"latitude_of_origin\",52.1561605555556],PARAMETER[\"central_meridian\",5.38763888888889],PARAMETER[\"scale_factor\",0.9999079],PARAMETER[\"false_easting\",155000],PARAMETER[\"false_northing\",463000],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"28992\"]]";
+            var fromCS = CoordinateSystemFactory.CreateFromWkt(wkt28992);
+			var toCS = GeographicCoordinateSystem.WGS84;
+            var trans = ctfac.CreateFromCoordinateSystems(fromCS, toCS);
+
+            double[] fromCoordinate = new double[] { 155000, 463000 };
+            double[] toCooordinate = trans.MathTransform.Transform(fromCoordinate);
+            double[] expected = new double[] {5.38721, 52.15517};
+            double[] invTransTest = trans.MathTransform.Inverse().Transform(toCooordinate);
+
+            const double tolerance = 0.1;
+            Assert.AreEqual(expected[0], toCooordinate[0], tolerance);
+            Assert.AreEqual(expected[1], toCooordinate[1], tolerance);
+            Assert.That(ToleranceLessThan(expected, toCooordinate, tolerance), TransformationError("Oblique_Stereographic", expected, toCooordinate));
+
+            Assert.AreEqual(fromCoordinate[0], invTransTest[0], tolerance);
+            Assert.AreEqual(fromCoordinate[1], invTransTest[1], tolerance);
+            Assert.That(ToleranceLessThan(fromCoordinate, invTransTest, tolerance), TransformationError("Oblique_Stereographic", fromCoordinate, invTransTest, true));
         }
     }
 }
