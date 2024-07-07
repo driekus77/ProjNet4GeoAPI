@@ -5,7 +5,7 @@
     <SignAssembly>true</SignAssembly>
     <NoWarn>1701;1702;1591</NoWarn>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>net6;net8.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)src\ProjNet\ProjNET.csproj" />
+    <ProjectReference Condition="'$(TargetFramework)' == 'net6.0'" Include="$(SolutionDir)src\ProjNet\ProjNET.csproj">
+      <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+    <ProjectReference Condition="'$(TargetFramework)' != 'net6.0'" Include="$(SolutionDir)src\ProjNet\ProjNET.csproj">
+      <SetTargetFramework>TargetFramework=net8.0</SetTargetFramework>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

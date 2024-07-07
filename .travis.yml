@@ -1,13 +1,17 @@
 language: csharp
 mono: none
 sudo: false
-dotnet: 8.0.6
+dotnet: 8.0.302
 dist: bionic
 
+before_install:
+  # explicitly install other targeted SDKs side by side
+  - sudo apt-get install dotnet-sdk-3.1
 
 script:
   - dotnet build -c Release
-  - dotnet test  -c Release --no-build
+  - dotnet test  -c Release --no-build -f netcoreapp3.1
+  - dotnet test  -c Release --no-build -f net8.0
   - dotnet pack  -c Release --no-build -p:NoWarn=NU5105
 
 
