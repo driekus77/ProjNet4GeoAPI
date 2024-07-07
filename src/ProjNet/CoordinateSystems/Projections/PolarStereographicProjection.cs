@@ -214,5 +214,6 @@ namespace ProjNet.CoordinateSystems.Projections
             double t = (sinphi > 0.0) ? cosphi / (1.0 + sinphi) : (1.0 - sinphi) / cosphi;
             return Math.Exp(e * Math.Atanh(e * sinphi)) * t;
         }
+
     }
 }

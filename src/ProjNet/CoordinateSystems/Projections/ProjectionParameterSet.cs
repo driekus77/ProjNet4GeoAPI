@@ -8,7 +8,7 @@ namespace ProjNet.CoordinateSystems.Projections
     /// A set of projection parameters
     /// </summary>
     // TODO: KeyedCollection<string, double>
-    [Serializable] 
+    [Serializable]
     public class ProjectionParameterSet : Dictionary<string, double>, IEquatable<ProjectionParameterSet>
     {
         private readonly Dictionary<string, string> _originalNames = new Dictionary<string, string>();
@@ -16,8 +16,16 @@ namespace ProjNet.CoordinateSystems.Projections
         /// <summary>
         /// Needed for serialzation
         /// </summary>
+        [Obsolete("This API supports obsolete formatter-based serialization. It should not be called or extended by application code")]
         public ProjectionParameterSet(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
             :base(info, context)
+        {}
+
+        /// <summary>
+        /// Default constructor needed for JSon (De)Serialization.
+        /// </summary>
+        public ProjectionParameterSet()
+            : this(new List<ProjectionParameter>())
         {}
 
         /// <summary>
@@ -34,7 +42,7 @@ namespace ProjNet.CoordinateSystems.Projections
                 Add(key, pp.Value);
             }
         }
-        
+
         /// <summary>
         /// Function to create an enumeration of <see cref="ProjectionParameter"/>s of the content of this projection parameter set.
         /// </summary>

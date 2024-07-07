@@ -5,7 +5,7 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProjNet is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -13,7 +13,7 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with ProjNet; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 using System;
 using System.Text;
@@ -24,23 +24,23 @@ namespace ProjNet.CoordinateSystems
 	/// The Info object defines the standard information
 	/// stored with spatial reference objects
     /// </summary>
-    [Serializable] 
+    [Serializable]
     public abstract class Info : IInfo
 	{
 		/// <summary>
 		/// A base interface for metadata applicable to coordinate system objects.
 		/// </summary>
 		/// <remarks>
-		/// <para>The metadata items ‘Abbreviation’, ‘Alias’, ‘Authority’, ‘AuthorityCode’, ‘Name’ and ‘Remarks’ 
+		/// <para>The metadata items ï¿½Abbreviationï¿½, ï¿½Aliasï¿½, ï¿½Authorityï¿½, ï¿½AuthorityCodeï¿½, ï¿½Nameï¿½ and ï¿½Remarksï¿½
 		/// were specified in the Simple Features interfaces, so they have been kept here.</para>
-		/// <para>This specification does not dictate what the contents of these items 
+		/// <para>This specification does not dictate what the contents of these items
 		/// should be. However, the following guidelines are suggested:</para>
-		/// <para>When <see cref="ICoordinateSystemAuthorityFactory"/> is used to create an object, the ‘Authority’
-		/// and 'AuthorityCode' values should be set to the authority name of the factory object, and the authority 
-		/// code supplied by the client, respectively. The other values may or may not be set. (If the authority is 
+		/// <para>When ICoordinateSystemAuthorityFactory is used to create an object, the ï¿½Authorityï¿½
+		/// and 'AuthorityCode' values should be set to the authority name of the factory object, and the authority
+		/// code supplied by the client, respectively. The other values may or may not be set. (If the authority is
 		/// EPSG, the implementer may consider using the corresponding metadata values in the EPSG tables.)</para>
 		/// <para>When <see cref="CoordinateSystemFactory"/> creates an object, the 'Name' should be set to the value
-		/// supplied by the client. All of the other metadata items should be left empty</para>
+		/// supplied by the client. All the other metadata items should be left empty</para>
 		/// </remarks>
 		/// <param name="name">Name</param>
 		/// <param name="authority">Authority name</param>
@@ -49,11 +49,11 @@ namespace ProjNet.CoordinateSystems
 		/// <param name="abbreviation">Abbreviation</param>
 		/// <param name="remarks">Provider-supplied remarks</param>
 		internal Info(
-						string name, 
-						string authority, 
-						long code, 
-						string alias, 
-						string abbreviation, 
+						string name,
+						string authority,
+						long code,
+						string alias,
+						string abbreviation,
 						string remarks)
 		{
 			_Name = name;
@@ -142,13 +142,13 @@ namespace ProjNet.CoordinateSystems
 		{
 			return WKT;
 		}
-		
+
 		/// <summary>
 		/// Returns the Well-known text for this object
 		/// as defined in the simple features specification.
 		/// </summary>
 		public abstract string WKT {get ;}
-		
+
 		/// <summary>
 		/// Gets an XML representation of this object.
 		/// </summary>

@@ -5,7 +5,7 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProjNet is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -13,11 +13,11 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with ProjNet; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // SOURCECODE IS MODIFIED FROM ANOTHER WORK AND IS ORIGINALLY BASED ON GeoTools.NET:
 /*
- *  Copyright (C) 2002 Urban Science Applications, Inc. 
+ *  Copyright (C) 2002 Urban Science Applications, Inc.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -49,13 +49,22 @@ namespace ProjNet.CoordinateSystems.Projections
     [Serializable]
     public abstract class MapProjection : MathTransform, IProjection
     {
+        // ReSharper disable InconsistentNaming
+        /// <summary>
+        /// EPS10 set to 1e-10
+        /// </summary>
         protected const double EPS10 = 1e-10;
 
+        /// <summary>
+        /// EPS7 set to 1e-7
+        /// </summary>
         protected const double EPS7 = 1e-7;
 
+        /// <summary>
+        /// HUGE_VAL set to double.NaN.
+        /// </summary>
         protected const double HUGE_VAL = double.NaN;
 
-        // ReSharper disable InconsistentNaming
         /// <summary>
         /// Eccentricity
         /// </summary>
@@ -224,7 +233,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
@@ -245,7 +254,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public int NumParameters
         {
@@ -630,7 +639,7 @@ namespace ProjNet.CoordinateSystems.Projections
             /*
             if (proj.NumParameters != NumParameters)
 				return false;
-			
+
             for (var i = 0; i < _Parameters.Count; i++)
 			{
 				var param = _Parameters.Find(par => par.Name.Equals(proj.GetParameter(i).Name, StringComparison.OrdinalIgnoreCase));
@@ -714,7 +723,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="A"></param>
         /// <param name="B"></param>
@@ -725,7 +734,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="A"></param>
         /// <param name="B"></param>
@@ -758,7 +767,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
@@ -805,8 +814,8 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// Function to compute constant small q which is the radius of a 
-        /// parallel of latitude, phi, divided by the semimajor axis. 
+        /// Function to compute constant small q which is the radius of a
+        /// parallel of latitude, phi, divided by the semimajor axis.
         /// </summary>
         protected static double qsfnz(double sinphi, double eccent)
         {
@@ -821,8 +830,8 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// Function to compute constant small q which is the radius of a 
-        /// parallel of latitude, phi, divided by the semimajor axis. 
+        /// Function to compute constant small q which is the radius of a
+        /// parallel of latitude, phi, divided by the semimajor axis.
         /// </summary>
         protected static double qsfn(double sinphi, double eccent, double one_es)
         {
@@ -871,8 +880,8 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
-        /// 
+        ///
+        ///
         /// </summary>
         /// <param name="eccent"></param>
         /// <param name="qs"></param>
@@ -979,7 +988,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
@@ -989,7 +998,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
@@ -999,7 +1008,7 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
@@ -1032,8 +1041,8 @@ namespace ProjNet.CoordinateSystems.Projections
         }
 
         /// <summary>
-        /// Calculates the meridian distance. This is the distance along the central 
-        /// meridian from the equator to <paramref name="phi"/>. Accurate to &lt; 1e-5 meters 
+        /// Calculates the meridian distance. This is the distance along the central
+        /// meridian from the equator to <paramref name="phi"/>. Accurate to &lt; 1e-5 meters
         /// when used in conjuction with typical major axis values.
         /// </summary>
         /// <param name="phi"></param>
@@ -1154,6 +1163,11 @@ namespace ProjNet.CoordinateSystems.Projections
         private const double P20 = 0.01677689594356261023; /* 761 / 45360 */
 
 
+        /// <summary>
+        /// authset
+        /// </summary>
+        /// <param name="es"></param>
+        /// <returns></returns>
         protected static double[] authset(double es)
         {
             double[] APA = new double[3];
@@ -1169,6 +1183,12 @@ namespace ProjNet.CoordinateSystems.Projections
             return APA;
         }
 
+        /// <summary>
+        /// authlat
+        /// </summary>
+        /// <param name="beta"></param>
+        /// <param name="APA"></param>
+        /// <returns></returns>
         protected static double authlat(double beta, double[] APA)
         {
             double t = beta + beta;

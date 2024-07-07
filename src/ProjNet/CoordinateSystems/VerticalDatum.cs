@@ -24,6 +24,9 @@ namespace ProjNet.CoordinateSystems
         {
         }
 
+        /// <summary>
+        /// Creates a new "Ordnance Datum Newlyn" (EPSG::5101)
+        /// </summary>
         public static VerticalDatum ODN
         {
             get

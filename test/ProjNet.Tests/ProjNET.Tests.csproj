@@ -2,14 +2,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <NoWarn>1701;1702;1591</NoWarn>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Update="NUnit3TestAdapter" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>

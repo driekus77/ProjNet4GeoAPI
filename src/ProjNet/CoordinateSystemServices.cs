@@ -5,7 +5,7 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // ProjNet is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with SharpMap; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
-    
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -45,16 +45,17 @@ namespace ProjNet
 
         private readonly CoordinateSystemFactory _coordinateSystemFactory;
         private readonly CoordinateTransformationFactory _ctFactory;
-        
+
         private readonly ManualResetEvent _initialization = new ManualResetEvent(false);
 
         #region CsEqualityComparer class
+
         private class CsEqualityComparer : EqualityComparer<IInfo>
         {
             public override bool Equals(IInfo x, IInfo y)
             {
                 return x.AuthorityCode == y.AuthorityCode &&
-                    string.Compare(x.Authority, y.Authority, StringComparison.OrdinalIgnoreCase) == 0;
+                       string.Compare(x.Authority, y.Authority, StringComparison.OrdinalIgnoreCase) == 0;
             }
 
             public override int GetHashCode(IInfo obj)
@@ -63,6 +64,7 @@ namespace ProjNet
                 return Convert.ToInt32(obj.AuthorityCode) + (obj.Authority != null ? obj.Authority.GetHashCode() : 0);
             }
         }
+
         #endregion
 
         #region CoordinateSystemKey class
@@ -80,14 +82,38 @@ namespace ProjNet
                 throw new NotSupportedException();
             }
 
-            public string Name { get { return null; } }
+            public string Name
+            {
+                get { return null; }
+            }
+
             public string Authority { get; private set; }
             public long AuthorityCode { get; private set; }
-            public string Alias { get { return null; } }
-            public string Abbreviation { get { return null; } }
-            public string Remarks { get { return null; } }
-            public string WKT { get { return null; } }
-            public string XML { get { return null; } }
+
+            public string Alias
+            {
+                get { return null; }
+            }
+
+            public string Abbreviation
+            {
+                get { return null; }
+            }
+
+            public string Remarks
+            {
+                get { return null; }
+            }
+
+            public string WKT
+            {
+                get { return null; }
+            }
+
+            public string XML
+            {
+                get { return null; }
+            }
         }
 
         #endregion
@@ -124,7 +150,7 @@ namespace ProjNet
         /*
         public static string GetFromSpatialReferenceOrg(string authority, long code)
         {
-            var url = string.Format("http://spatialreference.org/ref/{0}/{1}/ogcwkt/", 
+            var url = string.Format("http://spatialreference.org/ref/{0}/{1}/ogcwkt/",
                 authority.ToLowerInvariant(),
                 code);
             var req = (HttpWebRequest) WebRequest.Create(url);
@@ -164,9 +190,9 @@ namespace ProjNet
             _csBySrid = new Dictionary<int, CoordinateSystem>();
             _sridByCs = new Dictionary<IInfo, int>(new CsEqualityComparer());
 
-            object enumObj = (object)enumeration ?? DefaultInitialization();
+            object enumObj = (object) enumeration ?? DefaultInitialization();
             _initialization = new ManualResetEvent(false);
-            System.Threading.Tasks.Task.Run(() => FromEnumeration((new[] { this, enumObj })));
+            System.Threading.Tasks.Task.Run(() => FromEnumeration((new[] {this, enumObj})));
         }
 
         //private CoordinateSystemServices(ICoordinateSystemFactory coordinateSystemFactory,
@@ -179,7 +205,8 @@ namespace ProjNet
         //    ThreadPool.QueueUserWorkItem(FromEnumeration, new[] { this, enumObj });
         //}
 
-        private static CoordinateSystem CreateCoordinateSystem(CoordinateSystemFactory coordinateSystemFactory, string wkt)
+        private static CoordinateSystem CreateCoordinateSystem(CoordinateSystemFactory coordinateSystemFactory,
+            string wkt)
         {
             try
             {
@@ -233,7 +260,7 @@ namespace ProjNet
             if (paras[1] is IEnumerable<KeyValuePair<int, string>>)
                 FromEnumeration(css, (IEnumerable<KeyValuePair<int, string>>) paras[1]);
             else
-                FromEnumeration(css, (IEnumerable<KeyValuePair<int, CoordinateSystem>>)paras[1]);
+                FromEnumeration(css, (IEnumerable<KeyValuePair<int, CoordinateSystem>>) paras[1]);
 
             css._initialization.Set();
         }
@@ -305,6 +332,11 @@ namespace ProjNet
             return _ctFactory.CreateFromCoordinateSystems(source, target);
         }
 
+        /// <summary>
+        /// AddCoordinateSystem
+        /// </summary>
+        /// <param name="srid"></param>
+        /// <param name="coordinateSystem"></param>
         protected void AddCoordinateSystem(int srid, CoordinateSystem coordinateSystem)
         {
             lock (((IDictionary) _csBySrid).SyncRoot)
@@ -332,6 +364,11 @@ namespace ProjNet
             }
         }
 
+        /// <summary>
+        /// AddCoordinateSystem
+        /// </summary>
+        /// <param name="coordinateSystem"></param>
+        /// <returns></returns>
         protected virtual int AddCoordinateSystem(CoordinateSystem coordinateSystem)
         {
             int srid = (int) coordinateSystem.AuthorityCode;
@@ -340,11 +377,17 @@ namespace ProjNet
             return srid;
         }
 
+        /// <summary>
+        /// Clear
+        /// </summary>
         protected void Clear()
         {
             _csBySrid.Clear();
         }
 
+        /// <summary>
+        /// Count property
+        /// </summary>
         protected int Count
         {
             get
@@ -354,11 +397,21 @@ namespace ProjNet
             }
         }
 
+        /// <summary>
+        /// RemoveCoordinateSystem
+        /// </summary>
+        /// <param name="srid"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
         public bool RemoveCoordinateSystem(int srid)
         {
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// GetEnumerator
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator<KeyValuePair<int, CoordinateSystem>> GetEnumerator()
         {
             _initialization.WaitOne();

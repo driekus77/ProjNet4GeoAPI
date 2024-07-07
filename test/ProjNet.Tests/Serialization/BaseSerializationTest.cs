@@ -1,24 +1,16 @@
-﻿using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace ProjNET.Tests.Serialization
 {
     public class BaseSerializationTest
     {
-        public IFormatter GetFormatter()
+
+        public static T SanD<T>(T instance)
         {
-            return new BinaryFormatter();
+            string jsonData = JsonConvert.SerializeObject(instance);
+            return JsonConvert.DeserializeObject<T>(jsonData);
         }
 
-        public static T SanD<T>(T instance, IFormatter formatter)
-        {
-            using (var ms = new MemoryStream())
-            {
-                formatter.Serialize(ms, instance);
-                ms.Seek(0, SeekOrigin.Begin);
-                return (T)formatter.Deserialize(ms);
-            }
-        }
     }
 }

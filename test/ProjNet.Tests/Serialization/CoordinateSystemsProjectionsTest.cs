@@ -6,7 +6,7 @@ namespace ProjNET.Tests.Serialization
     public class CoordinateSystemsProjectionsTest : BaseSerializationTest
     {
         [Test]
-        public void TestProjectionParameterSet() 
+        public void TestProjectionParameterSet()
         {
             var ps = new ProjNet.CoordinateSystems.Projections.ProjectionParameterSet(
                 new[]
@@ -16,7 +16,7 @@ namespace ProjNET.Tests.Serialization
                     }
                 );
 
-            var psD = SanD(ps, GetFormatter());
+            var psD = SanD(ps);
 
             Assert.AreEqual(ps, psD);
         }
