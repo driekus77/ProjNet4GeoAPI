@@ -20,4 +20,8 @@
     <EmbeddedResource Include="SRID.csv" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="WKT\v1\" />
+  </ItemGroup>
+
 </Project>

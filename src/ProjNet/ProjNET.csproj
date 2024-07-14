@@ -36,4 +36,8 @@ Proj.NET performs point-to-point coordinate conversions between geodetic coordin
 		<ResolvedMatchingContract Include="$(NugetPackageRoot)projnet\2.0.0\lib\netstandard2.0\ProjNET.dll" />
 	</ItemGroup>
 
+	<ItemGroup> 
+	  <PackageReference Include="Pidgin" Version="2.5.0" />
+	</ItemGroup>
+
 </Project>
