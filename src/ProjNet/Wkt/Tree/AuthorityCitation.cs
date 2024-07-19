@@ -9,11 +9,19 @@ namespace ProjNet.Wkt.v1.tree
     {
         private string Citation { get; set; }
 
+        /// <summary>
+        /// AuthorityCitation
+        /// </summary>
+        /// <param name="citation"></param>
         public AuthorityCitation(string citation)
         {
             Citation = citation;
         }
 
+        /// <summary>
+        /// Convert (back) to WKT.
+        /// </summary>
+        /// <returns></returns>
         public string ToWKT()
         {
             var sb = new StringBuilder();
@@ -23,6 +31,11 @@ namespace ProjNet.Wkt.v1.tree
             sb.Append($@"""]");
 
             return sb.ToString();
+        }
+
+        public override string ToString()
+        {
+            return Citation;
         }
     }
 }

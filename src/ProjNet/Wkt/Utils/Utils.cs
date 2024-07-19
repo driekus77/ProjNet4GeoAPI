@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 namespace ProjNet.Wkt
 {
@@ -7,13 +8,12 @@ namespace ProjNet.Wkt
     /// </summary>
     public class Utils
     {
-        internal static double CalcAsFractionOf(uint i, uint f)
+        internal static double CalcAsFractionOf(uint i, string fraction)
         {
-            // Convert f to string to count the digits
-            string fstr = f.ToString();
-            int fractionDigits = fstr.Length;
+            int fractionDigits = fraction.Length;
 
             double d = i;
+            double f = double.Parse(fraction, NumberStyles.Any, CultureInfo.InvariantCulture);
 
             // Calculate the fractional part from f based on the number of fractional digits
             double divisor = Math.Pow(10, fractionDigits);

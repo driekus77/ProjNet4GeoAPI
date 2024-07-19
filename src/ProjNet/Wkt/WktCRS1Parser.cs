@@ -16,7 +16,7 @@ namespace ProjNet.Wkt
     /// WKT1Parser - Base parser for WKT 1 using Parser Combinator Library Pidgin.
     /// </summary>
     /// <seealso href="https://github.com/benjamin-hodgson/Pidgin"/>
-    public class Wkt1Parser
+    public class WktCRS1Parser
     {
 
         // 6.3.1    Basic characters
@@ -139,7 +139,7 @@ namespace ProjNet.Wkt
         internal static readonly Parser<char, char> Sign = OneOf(PlusSign, MinusSign);
         // <unsigned integer>
         internal static readonly Parser<char, string> UnsignedIntegerString =
-            Wkt1Parser.Didgit.AtLeastOnceString();
+            WktCRS1Parser.Didgit.AtLeastOnceString();
         internal static readonly Parser<char, uint> UnsignedInteger =
             UnsignedIntegerString
                 .Select(uint.Parse);
@@ -147,7 +147,7 @@ namespace ProjNet.Wkt
         // <exact numeric literal>
         internal static readonly Parser<char, double> ExactNumericLiteralDotted =
             Period
-                .Then(UnsignedInteger, (c, ui) => ui / Math.Pow(10, Math.Floor(Math.Log10(ui) + 1)));
+                .Then(UnsignedIntegerString, (c, ui) => Utils.CalcAsFractionOf(0, ui));
 
         internal static readonly Parser<char, double> ExactNumericLiteral =
             UnsignedInteger.Optional()
@@ -197,33 +197,33 @@ namespace ProjNet.Wkt
         // 6.3.3 Date and time
 
         // <day> ::= <unsigned integer> !! two digits
-        internal static readonly Parser<char, uint> Day = Wkt1Parser.Didgit
+        internal static readonly Parser<char, uint> Day = WktCRS1Parser.Didgit
             .Repeat(2)
             .Select(d => uint.Parse(new string(d.ToArray())));
         // <month> ::= <unsigned integer> !! two digits
-        internal static readonly Parser<char, uint> Month = Wkt1Parser.Didgit
+        internal static readonly Parser<char, uint> Month = WktCRS1Parser.Didgit
             .Repeat(2)
             .Select(m => uint.Parse(new string(m.ToArray())));
         // <year> ::= <unsigned integer> !! four digits
-        internal static readonly Parser<char, uint> Year = Wkt1Parser.Didgit
+        internal static readonly Parser<char, uint> Year = WktCRS1Parser.Didgit
             .Repeat(4)
             .Select(y => uint.Parse(new string(y.ToArray())));
 
         // <hour> ::= <unsigned integer>
         // !! two digits including leading zero if less than 10
-        internal static readonly Parser<char, uint> Hour = Wkt1Parser.Didgit
+        internal static readonly Parser<char, uint> Hour = WktCRS1Parser.Didgit
             .Repeat(2)
             .Select(h => uint.Parse(new string(h.ToArray())));
 
         // <minute> ::= <unsigned integer>
         // !! two digits including leading zero if less than 10
-        internal static readonly Parser<char, uint> Minute = Wkt1Parser.Didgit
+        internal static readonly Parser<char, uint> Minute = WktCRS1Parser.Didgit
             .Repeat(2)
             .Select(h => uint.Parse(new string(h.ToArray())));
 
         // <seconds integer> ::= <unsigned integer>
         // !! two digits including leading zero if less than 10
-        internal static readonly Parser<char, uint> SecondsInteger = Wkt1Parser.Didgit
+        internal static readonly Parser<char, uint> SecondsInteger = WktCRS1Parser.Didgit
             .Repeat(2)
             .Select(h => uint.Parse(new string(h.ToArray())));
         // <seconds fraction> ::= <unsigned integer>
@@ -271,7 +271,7 @@ namespace ProjNet.Wkt
             .Then(TimeZoneDesignator, (dtb, ts) => dtb.SetLocalOffset(ts));
 
         // <ordinal day> ::= <unsigned integer> !! three digits
-        internal static readonly Parser<char, uint> OrdinalDay = Wkt1Parser.Didgit
+        internal static readonly Parser<char, uint> OrdinalDay = WktCRS1Parser.Didgit
             .Repeat(3)
             .Select(od => uint.Parse(new string(od.ToArray())));
 
@@ -323,7 +323,7 @@ namespace ProjNet.Wkt
 
         // <nondoublequote character> ::=  !! A <nondoublequote character> is any character of the source language character set other than a <double quote>.
         internal static readonly Parser<char, string> NonDoubleQuoteCharacter =
-            DoubleQuoteSymbol.Where(s => !DoubleQuoteSymbol.Parse(s).Success);
+            DoubleQuoteSymbol.Where(s => !DoubleQuote.Parse(s).Success);
 
         // <left delimiter> ::= <left bracket> | <left paren>
         // !! In this International Standard the preferred left delimiter is <left bracket>. <left paren> is permitted for backward compatibility. Implementations shall be able to read both forms.
@@ -344,7 +344,7 @@ namespace ProjNet.Wkt
         // | <solidus> | <reverse solidus> | <question mark> | <vertical bar>
         // | <degree symbol> | <doublequote symbol>
         internal static readonly Parser<char, char> WktLatinTextCharacterChars = OneOf(
-            SimpleLatinUpperCaseLetter, SimpleLatinLowerCaseLetter, Wkt1Parser.Didgit, Underscore,
+            SimpleLatinUpperCaseLetter, SimpleLatinLowerCaseLetter, WktCRS1Parser.Didgit, Underscore,
             LeftBracket, RightBracket,
             LessThanOperator, EqualsOperator, GreaterThanOperator, Period, Comma, Colon, SemiColon,
             PlusSign, MinusSign, Space, NumberSign,
@@ -365,8 +365,16 @@ namespace ProjNet.Wkt
                 .Labelled("Quoted Latin Text");
 
         // <wkt Unicode text character> ::= <nondouble quote> | <doublequote symbol>
-        internal static readonly Parser<char, string> WktUnicodeTextCharacter =
-            NonDoubleQuoteCharacter.Or(DoubleQuoteSymbol)
+        internal static readonly Parser<char, string> WktUnicodeTextCharacter = OneOf(
+            LetterOrDigit.Select(c => c.ToString()),
+            Space.Select(c => c.ToString()),
+            DoubleQuoteSymbol)
+                .Labelled("Wkt Unicode Text Character");
+        internal static readonly Parser<char, string>
+            WktUnicodeTextCharacters = WktUnicodeTextCharacter.AtLeastOnceString();
+
+        internal static readonly Parser<char, string> QuotedUnicodeText =
+            WktUnicodeTextCharacters.Between(DoubleQuote, DoubleQuote)
                 .Labelled("Quoted Unicode Text");
 
 
@@ -534,10 +542,7 @@ namespace ProjNet.Wkt
         // <identifier> ::= <identifier keyword> <left delimiter> <authority name>
         // <wkt separator> <authority unique identifier>
         // [ <wkt separator> <version> ] [ <wkt separator> <authority citation> ] [ <wkt separator> <id uri> ] <right delimiter>
-        internal static readonly Parser<char, object> IdentifierVersionPartParser = WktSeparator.Then(VersionParser);
-        internal static readonly Parser<char, AuthorityCitation> IdentifierAuthorityCitationPartParser = WktSeparator.Then(AuthorityCitationParser);
-        internal static readonly Parser<char, Uri> IdentifierUriPartParser = WktSeparator.Then(IdUriParser);
-        internal static readonly Parser<char, Identifier> IdentifierParser = IdentifierKeywordParser
+        internal static readonly Parser<char, Identifier> IdentifierParser = Try(IdentifierKeywordParser
             .Then(LeftDelimiter)
             .Then(AuthorityNameParser).Select(an => new Identifier {AuthorityName = an})
             .Then(WktSeparator.Then(AuthorityUniqueIdentifierParser), (identifier, o) =>
@@ -545,28 +550,57 @@ namespace ProjNet.Wkt
                 identifier.AuthorityUniqueIdentifier = o;
                 return identifier;
             })
-            .Then(IdentifierVersionPartParser.Optional(), (identifier, version) =>
+            .Then(Try(WktSeparator.Then(VersionParser)).Optional(), (identifier, version) =>
             {
                 identifier.Version = version.GetValueOrDefault();
                 return identifier;
             })
-            .Then(IdentifierAuthorityCitationPartParser.Optional(), (identifier, citation) =>
+            .Then(Try(WktSeparator.Then(AuthorityCitationParser)).Optional(), (identifier, citation) =>
             {
                 identifier.AuthorityCitation = citation.GetValueOrDefault();
                 return identifier;
             })
-            .Then(IdentifierUriPartParser.Optional(), (identifier, uri) =>
+            .Then(Try(WktSeparator.Then(IdUriParser)).Optional(), (identifier, uri) =>
             {
                 identifier.IdUri = uri.GetValueOrDefault();
                 return identifier;
             })
-            .Before(RightDelimiter);
+            .Before(RightDelimiter));
+
+
+        // 7.3.5 Remark
+        // <remark keyword> ::= REMARK
+        internal static readonly Parser<char, string> RemarkKeywordParser = String("REMARK");
+
+        // <remark> ::= <remark keyword> <left delimiter> <quoted Unicode text> <right delimiter>
+        internal static readonly Parser<char, Remark> RemarkParser = RemarkKeywordParser
+            .Then(LeftDelimiter)
+            .Then(QuotedUnicodeText)
+            .Before(RightDelimiter)
+            .Select(s => new Remark(s));
 
 
         // <scope extent identifier remark> ::= [ <wkt separator> <scope> ]
         //                                      [ { <wkt separator> <extent> } ]...
         //                                      [ { <wkt separator> <identifier> } ]...
         //                                      [ <wkt separator> <remark>]
+        internal static readonly Parser<char, ScopeExtentIdentifierRemarkElement>
+            ScopeExtentIdentifierRemarkElementParser =
+                WktSeparator.Then(ScopeParser).Optional()
+                    .Then(WktSeparator.Then(ExtentParser).Many(),
+                        (scope, extents) =>
+                            new ScopeExtentIdentifierRemarkElement(scope.GetValueOrDefault(), extents.ToList()))
+                    .Then(WktSeparator.Then(IdentifierParser).Many(),
+                        (element, identifiers) =>
+                        {
+                            element.Identifiers = identifiers.ToList();
+                            return element;
+                        })
+                    .Then(WktSeparator.Then(RemarkParser).Optional(), (element, remark) =>
+                    {
+                        element.Remark = remark.GetValueOrDefault();
+                        return element;
+                    });
 
     }
 }
