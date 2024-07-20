@@ -90,5 +90,12 @@ namespace ProjNet.Wkt.Tree
                 return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (int) Direction;
             }
         }
+
+
+        /// <inheritdoc/>>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            handler.Handle(this);
+        }
     }
 }

@@ -114,5 +114,11 @@ namespace ProjNet.Wkt.Tree
                 return hashCode;
             }
         }
+
+        /// <inheritdoc/>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            handler.Handle(this);
+        }
     }
 }

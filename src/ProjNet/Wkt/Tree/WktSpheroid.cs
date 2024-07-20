@@ -5,25 +5,8 @@ namespace ProjNet.Wkt.Tree
     /// <summary>
     /// WktSpheroid class.
     /// </summary>
-    public class WktSpheroid : WktBaseObject, IEquatable<WktSpheroid>
+    public class WktSpheroid : WktEllipsoid, IEquatable<WktSpheroid>
     {
-        /// <summary>
-        /// Name property.
-        /// </summary>
-        public string Name { get; internal set; }
-        /// <summary>
-        /// SemiMajorAxis property.
-        /// </summary>
-        public double SemiMajorAxis { get; internal set; }
-        /// <summary>
-        /// InverseFlattening property.
-        /// </summary>
-        public double InverseFlattening { get; internal set; }
-        /// <summary>
-        /// Authority property.
-        /// </summary>
-        public WktAuthority Authority { get; internal set; }
-
         /// <summary>
         /// Constructor for a WktSpheroid.
         /// </summary>
@@ -36,12 +19,8 @@ namespace ProjNet.Wkt.Tree
         /// <param name="rightDelimiter"></param>
         public WktSpheroid(string name, double semiMajorAxis, double inverseFlattening, WktAuthority authority,
                             string keyword = "SPHEROID", char leftDelimiter = '[', char rightDelimiter = ']')
-            : base(keyword, leftDelimiter, rightDelimiter)
+            : base(name, semiMajorAxis, inverseFlattening, authority, keyword, leftDelimiter, rightDelimiter)
         {
-            Name = name;
-            SemiMajorAxis = semiMajorAxis;
-            InverseFlattening = inverseFlattening;
-            Authority = authority;
         }
 
 
@@ -86,6 +65,15 @@ namespace ProjNet.Wkt.Tree
                 hashCode = (hashCode * 397) ^ (Authority != null ? Authority.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        /// <inheritdoc/>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            if (Authority!=null)
+                Authority.Traverse(handler);
+
+            handler.Handle(this);
         }
     }
 }

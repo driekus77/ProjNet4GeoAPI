@@ -5,7 +5,7 @@ namespace ProjNet.Wkt.Tree
     /// <summary>
     /// Base class for all WKT Objects.
     /// </summary>
-    public class WktBaseObject : IWktObject
+    public abstract class WktBaseObject : IWktObject
     {
         /// <inheritdoc/>
         public string Keyword { get; internal set; }
@@ -19,21 +19,6 @@ namespace ProjNet.Wkt.Tree
         /// RightDelimiter used after content.
         /// </summary>
         public char RightDelimiter { get; set; }
-
-
-        /// <inheritdoc/>
-        public virtual IWktObject SetLeftDelimiter(char leftDelimiter)
-        {
-            LeftDelimiter = leftDelimiter;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public virtual IWktObject SetRightDelimiter(char rightDelimiter)
-        {
-            RightDelimiter = rightDelimiter;
-            return this;
-        }
 
 
         /// <summary>
@@ -57,17 +42,8 @@ namespace ProjNet.Wkt.Tree
         }
 
 
-
-        /// <summary>
-        /// Cast function for all IWktObject"s.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public virtual T As<T>() where T : IWktObject
-        {
-            return (T) Convert.ChangeType(this, typeof(T));
-        }
-
+        /// <inheritdoc/>
+        public abstract void Traverse(IWktTraverseHandler handler);
 
     }
 }

@@ -124,5 +124,37 @@ namespace ProjNet.Wkt.Tree
                 return hashCode;
             }
         }
+
+
+        /// <inheritdoc/>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            if (GeographicCoordinateSystem!=null)
+                GeographicCoordinateSystem.Traverse(handler);
+            if (Projection!=null)
+                Projection.Traverse(handler);
+
+            if (Parameters != null)
+            {
+                foreach (var p in Parameters)
+                    p.Traverse(handler);
+            }
+
+            if (Unit!=null)
+                Unit.Traverse(handler);
+
+            if (Axes != null)
+            {
+                foreach (var axis in Axes)
+                    axis.Traverse(handler);
+            }
+
+            if (Authority!=null)
+                Authority.Traverse(handler);
+            if (Extension!=null)
+                Extension.Traverse(handler);
+
+            handler.Handle(this);
+        }
     }
 }

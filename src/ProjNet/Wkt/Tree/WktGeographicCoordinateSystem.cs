@@ -125,5 +125,28 @@ namespace ProjNet.Wkt.Tree
                 return hashCode;
             }
         }
+
+
+        /// <inheritdoc/>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            if (AngularUnit!=null)
+                AngularUnit.Traverse(handler);
+            if (Unit!=null)
+                Unit.Traverse(handler);
+            if (HorizontalDatum!=null)
+                HorizontalDatum.Traverse(handler);
+            if (PrimeMeridian!=null)
+                PrimeMeridian.Traverse(handler);
+
+            foreach (var axis in Axes)
+                if (axis!=null)
+                    axis.Traverse(handler);
+
+            if (Authority!=null)
+                Authority.Traverse(handler);
+
+            handler.Handle(this);
+        }
     }
 }

@@ -12,25 +12,11 @@ namespace ProjNet.Wkt.Tree
         string Keyword { get; }
 
 
-        /// <summary>
-        /// Set Left Delimiter. (For semantic checking).
-        /// </summary>
-        /// <param name="leftDelimiter"></param>
-        /// <returns></returns>
-        IWktObject SetLeftDelimiter(char leftDelimiter);
 
         /// <summary>
-        /// Set Right Delimiter. (For semantic checking).
+        /// Traverse this object and its descendants calling the handler as we go down.
         /// </summary>
-        /// <param name="rightDelimiter"></param>
-        /// <returns></returns>
-        IWktObject SetRightDelimiter(char rightDelimiter);
-
-        /// <summary>
-        /// Cast function to reach the "lower" interfaces.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        T As<T>() where T : IWktObject;
+        /// <param name="handler"></param>
+        void Traverse(IWktTraverseHandler handler);
     }
 }

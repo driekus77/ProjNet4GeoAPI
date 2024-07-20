@@ -71,5 +71,15 @@ namespace ProjNet.Wkt.Tree
                 return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Authority != null ? Authority.GetHashCode() : 0);
             }
         }
+
+
+        /// <inheritdoc/>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            if (Authority!=null)
+                Authority.Traverse(handler);
+
+            handler.Handle(this);
+        }
     }
 }

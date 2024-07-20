@@ -30,5 +30,15 @@ namespace ProjNet.Wkt.Tree
             Name = name;
         }
 
+        /// <inheritdoc/>>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            if (this is WktProjectedCoordinateSystem projcs)
+                projcs.Traverse(handler);
+            else if (this is WktGeographicCoordinateSystem geogcs)
+                geogcs.Traverse(handler);
+            else if (this is WktGeocentricCoordinateSystem geoccs)
+                geoccs.Traverse(handler);
+        }
     }
 }

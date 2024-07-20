@@ -83,5 +83,18 @@ namespace ProjNet.Wkt.Tree
                 return hashCode;
             }
         }
+
+        /// <inheritdoc/>
+        public override void Traverse(IWktTraverseHandler handler)
+        {
+            if (Spheroid!=null)
+                this.Spheroid.Traverse(handler);
+            if (ToWgs84!=null)
+                this.ToWgs84.Traverse(handler);
+            if (Authority!=null)
+                this.Authority.Traverse(handler);
+
+            handler.Handle(this);
+        }
     }
 }
