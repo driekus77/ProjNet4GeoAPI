@@ -2,6 +2,9 @@ using System;
 
 namespace ProjNet.Wkt.Tree
 {
+    /// <summary>
+    /// WktDatum class.
+    /// </summary>
     public class WktDatum : WktBaseObject, IEquatable<WktDatum>
     {
         /// <summary>
@@ -29,56 +32,22 @@ namespace ProjNet.Wkt.Tree
         /// Constructor for WKT Datum.
         /// </summary>
         /// <param name="name"></param>
-        public WktDatum(string name = null)
+        public WktDatum(string name, WktSpheroid spheroid, WktToWgs84 toWgs84, WktAuthority authority,
+                        string keyword = "DATUM", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
             Name = name;
-        }
-
-
-        /// <summary>
-        /// Setter method for Name.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public WktDatum SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Spehroid.
-        /// </summary>
-        /// <param name="spheroid"></param>
-        /// <returns></returns>
-        public WktDatum SetSpheroid(WktSpheroid spheroid)
-        {
             Spheroid = spheroid;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for ToWgs84.
-        /// </summary>
-        /// <param name="toWgs84"></param>
-        /// <returns></returns>
-        public WktDatum SetToWgs84(WktToWgs84 toWgs84)
-        {
             ToWgs84 = toWgs84;
-            return this;
+            Authority = authority;
         }
+
 
         /// <summary>
-        /// Setter method for Authority.
+        /// IEquatable.Equals implementation checking the whole tree.
         /// </summary>
-        /// <param name="authority"></param>
+        /// <param name="other"></param>
         /// <returns></returns>
-        public WktDatum SetAuthority(WktAuthority authority)
-        {
-            Authority = authority;
-            return this;
-        }
-
         public bool Equals(WktDatum other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -86,6 +55,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && Equals(Spheroid, other.Spheroid) && Equals(ToWgs84, other.ToWgs84) && Equals(Authority, other.Authority);
         }
 
+        /// <summary>
+        /// Override basic Equals method.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -94,6 +68,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktDatum) obj);
         }
 
+        /// <summary>
+        /// Override basic GetHashCode method.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

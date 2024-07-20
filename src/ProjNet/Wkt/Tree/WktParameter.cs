@@ -22,35 +22,25 @@ namespace ProjNet.Wkt.Tree
         /// Constructor with optional name.
         /// </summary>
         /// <param name="name"></param>
-        public WktParameter(string name = null)
+        /// <param name="value"></param>
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktParameter(string name, double value,
+                            string keyword = "PARAMETER", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
             Name = name;
+            Value = value;
         }
+
 
 
         /// <summary>
-        /// Name setter method.
+        /// IEquatable.Equals implementation checking the whole tree.
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="other"></param>
         /// <returns></returns>
-        public WktParameter SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
-
-
-        /// <summary>
-        /// Value setter method.
-        /// </summary>
-        /// <param name="d"></param>
-        /// <returns></returns>
-        public WktParameter SetValue(double d)
-        {
-            Value = d;
-            return this;
-        }
-
         public bool Equals(WktParameter other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -58,6 +48,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && Value.Equals(other.Value);
         }
 
+        /// <summary>
+        /// Override of basic Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -66,6 +61,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktParameter) obj);
         }
 
+        /// <summary>
+        /// Override of basic GetHashCode.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

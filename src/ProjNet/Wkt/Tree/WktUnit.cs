@@ -18,7 +18,7 @@ namespace ProjNet.Wkt.Tree
         public double ConversionFactor { get; internal set; }
 
         /// <summary>
-        /// Authority property.
+        /// Authority property. (Optional)
         /// </summary>
         public WktAuthority Authority { get; internal set; }
 
@@ -27,45 +27,26 @@ namespace ProjNet.Wkt.Tree
         /// Constructor for WKT Unit.
         /// </summary>
         /// <param name="name"></param>
-        public WktUnit(string name)
-        {
-            Name = name;
-        }
-
-
-        /// <summary>
-        /// Setter method for Name.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public WktUnit SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for ConversionFactor.
-        /// </summary>
-        /// <param name="factor"></param>
-        /// <returns></returns>
-        public WktUnit SetConversionFactor(double factor)
-        {
-            ConversionFactor = factor;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Authority.
-        /// </summary>
+        /// <param name="conversionFactor"></param>
         /// <param name="authority"></param>
-        /// <returns></returns>
-        public WktUnit SetAuthority(WktAuthority authority)
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktUnit(string name, double conversionFactor, WktAuthority authority,
+                        string keyword = "UNIT", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
+            Name = name;
+            ConversionFactor = conversionFactor;
             Authority = authority;
-            return this;
         }
 
+
+        /// <summary>
+        /// Implementing IEquatable.Equals checking the whole tree.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(WktUnit other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -73,6 +54,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && ConversionFactor.Equals(other.ConversionFactor) && Equals(Authority, other.Authority);
         }
 
+        /// <summary>
+        /// Overriding basic Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -81,6 +67,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktUnit) obj);
         }
 
+        /// <summary>
+        /// Overriding basic GetHashCode method.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

@@ -49,89 +49,37 @@ namespace ProjNet.Wkt.Tree
         /// Constructor.
         /// </summary>
         /// <param name="name"></param>
-        public WktProjectedCoordinateSystem(string name = null) : base(name)
-        {
-        }
-
-
-        /// <summary>
-        /// Setter method for GeographicCoordinateSystem.
-        /// </summary>
-        /// <param name="cs"></param>
-        /// <returns></returns>
-        public WktProjectedCoordinateSystem SetGeographicCoordinateSystem(WktGeographicCoordinateSystem cs)
-        {
-            GeographicCoordinateSystem = cs;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Projection.
-        /// </summary>
+        /// <param name="geographicCoordinateSystem"></param>
         /// <param name="projection"></param>
-        /// <returns></returns>
-        public WktProjectedCoordinateSystem SetProjection(WktProjection projection)
-        {
-            Projection = projection;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Parameters.
-        /// </summary>
         /// <param name="parameters"></param>
-        /// <returns></returns>
-        public WktProjectedCoordinateSystem SetParameters(IEnumerable<WktParameter> parameters)
-        {
-            Parameters = parameters;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Unit.
-        /// </summary>
         /// <param name="unit"></param>
-        /// <returns></returns>
-        public WktProjectedCoordinateSystem SetUnit(WktUnit unit)
-        {
-            Unit = unit;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Axes.
-        /// </summary>
         /// <param name="axes"></param>
-        /// <returns></returns>
-        public WktProjectedCoordinateSystem SetAxes(IEnumerable<WktAxis> axes)
-        {
-            Axes = axes;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Authority.
-        /// </summary>
-        /// <param name="authority"></param>
-        /// <returns></returns>
-        public WktProjectedCoordinateSystem SetAuthority(WktAuthority authority)
-        {
-            Authority = authority;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Extension.
-        /// </summary>
         /// <param name="extension"></param>
-        /// <returns></returns>
-        public WktProjectedCoordinateSystem SetExtension(WktExtension extension)
+        /// <param name="authority"></param>
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktProjectedCoordinateSystem(string name, WktGeographicCoordinateSystem geographicCoordinateSystem, WktProjection projection,
+                                            IEnumerable<WktParameter> parameters, WktUnit unit, IEnumerable<WktAxis> axes,
+                                            WktExtension extension, WktAuthority authority,
+                                            string keyword = "PROJCS", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(name, keyword, leftDelimiter, rightDelimiter)
         {
+            GeographicCoordinateSystem = geographicCoordinateSystem;
+            Projection = projection;
+            Parameters = parameters ?? new List<WktParameter>();
+            Unit = unit;
+            Axes = axes;
             Extension = extension;
-            return this;
+            Authority = authority;
         }
 
 
+        /// <summary>
+        /// Implentation of IEquatable.Equals.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(WktProjectedCoordinateSystem other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -145,6 +93,11 @@ namespace ProjNet.Wkt.Tree
                    Equals(Extension, other.Extension);
         }
 
+        /// <summary>
+        /// Override basic Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -153,6 +106,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktProjectedCoordinateSystem) obj);
         }
 
+        /// <summary>
+        /// Override basic GetHashCode.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

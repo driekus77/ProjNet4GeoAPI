@@ -7,6 +7,9 @@ namespace ProjNet.Wkt.Tree
     /// </summary>
     public class WktBaseObject : IWktObject
     {
+        /// <inheritdoc/>
+        public string Keyword { get; internal set; }
+
         /// <summary>
         /// LeftDelimiter used after keyword to surround content.
         /// </summary>
@@ -30,6 +33,27 @@ namespace ProjNet.Wkt.Tree
         {
             RightDelimiter = rightDelimiter;
             return this;
+        }
+
+
+        /// <summary>
+        /// Constructor for all Wkt Object's.
+        /// </summary>
+        /// <param name="keyword"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <exception cref="NotSupportedException"></exception>
+        public WktBaseObject(string keyword = null, char left = '[', char right = ']')
+        {
+            Keyword = keyword;
+
+            // Check the provided delimiters and store them.
+            if (!((left == '[' && right == ']') || (left == '(' && right == ')')))
+                throw new NotSupportedException(
+                    "Delimiters are not supported or left and right delimiters don't match!");
+
+            LeftDelimiter = left;
+            RightDelimiter = right;
         }
 
 

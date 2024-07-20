@@ -21,9 +21,9 @@ namespace ProjNet.Wkt.Tree
         public WktPrimeMeridian PrimeMeridian { get; internal set; }
 
         /// <summary>
-        /// LinearUnit property.
+        /// Unit property.
         /// </summary>
-        public WktLinearUnit LinearUnit { get; internal set; }
+        public WktUnit Unit { get; internal set; }
 
         /// <summary>
         /// Authority property.
@@ -40,73 +40,43 @@ namespace ProjNet.Wkt.Tree
         /// Constructor.
         /// </summary>
         /// <param name="name"></param>
-        public WktGeocentricCoordinateSystem(string name = null) : base(name)
-        {
-        }
-
-
-        /// <summary>
-        /// Setter method for Datum.
-        /// </summary>
         /// <param name="datum"></param>
-        /// <returns></returns>
-        public WktGeocentricCoordinateSystem SetDatum(WktDatum datum)
+        /// <param name="meridian"></param>
+        /// <param name="unit"></param>
+        /// <param name="axes"></param>
+        /// <param name="authority"></param>
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktGeocentricCoordinateSystem(string name, WktDatum datum, WktPrimeMeridian meridian,
+                                                WktUnit unit, IEnumerable<WktAxis> axes, WktAuthority authority,
+                                                string keyword = "GEOCS", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(name, keyword, leftDelimiter, rightDelimiter)
         {
             Datum = datum;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for PrimeMeridian.
-        /// </summary>
-        /// <param name="primeMeridian"></param>
-        /// <returns></returns>
-        public WktGeocentricCoordinateSystem SetPrimeMeridian(WktPrimeMeridian primeMeridian)
-        {
-            PrimeMeridian = primeMeridian;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for LinearUnit
-        /// </summary>
-        /// <param name="linearUnit"></param>
-        /// <returns></returns>
-        public WktGeocentricCoordinateSystem SetLinearUnit(WktLinearUnit linearUnit)
-        {
-            LinearUnit = linearUnit;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Authority.
-        /// </summary>
-        /// <param name="authority"></param>
-        /// <returns></returns>
-        public WktGeocentricCoordinateSystem SetAuthority(WktAuthority authority)
-        {
-            Authority = authority;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Axes.
-        /// </summary>
-        /// <param name="axes"></param>
-        /// <returns></returns>
-        public WktGeocentricCoordinateSystem SetAxes(IEnumerable<WktAxis> axes)
-        {
+            PrimeMeridian = meridian;
+            Unit = unit;
             Axes = axes;
-            return this;
+            Authority = authority;
         }
 
+        /// <summary>
+        /// Implementation of IEquatable.Equals.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(WktGeocentricCoordinateSystem other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(Datum, other.Datum) && Equals(PrimeMeridian, other.PrimeMeridian) && Equals(LinearUnit, other.LinearUnit) && Equals(Authority, other.Authority) && Axes.SequenceEqual(other.Axes);
+            return Equals(Datum, other.Datum) && Equals(PrimeMeridian, other.PrimeMeridian) && Equals(Unit, other.Unit) && Equals(Authority, other.Authority) && Axes.SequenceEqual(other.Axes);
         }
 
+        /// <summary>
+        /// Override of basic Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -115,6 +85,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktGeocentricCoordinateSystem) obj);
         }
 
+        /// <summary>
+        /// Override of basic GetHashCode.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked
@@ -122,7 +96,7 @@ namespace ProjNet.Wkt.Tree
                 int hashCode = base.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Datum != null ? Datum.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (PrimeMeridian != null ? PrimeMeridian.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (LinearUnit != null ? LinearUnit.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Unit != null ? Unit.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Authority != null ? Authority.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Axes != null ? Axes.GetHashCode() : 0);
                 return hashCode;

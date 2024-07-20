@@ -1,12 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using Pidgin;
-using ProjNet.CoordinateSystems;
-using ProjNet.Wkt.Builders;
 using ProjNet.Wkt.Tree;
 using static Pidgin.Parser;
-using Unit = ProjNet.CoordinateSystems.Unit;
 
 
 namespace ProjNet.Wkt
@@ -168,8 +163,8 @@ namespace ProjNet.Wkt
             MantissaParser.Then(ApproximateNumericLiteralExpParser.Optional(), (m, e) => m * (e.HasValue ? e.Value : 1));
 
         // <simple Latin letter> ::= <simple Latin upper case letter>|<simple Latin lower case letter>
-        internal static readonly Parser<char, char> SimpleLatinLetterParser =
-            SimpleLatinUpperCaseLetterParser.Or(SimpleLatinLowerCaseLetterParser);
+        internal static readonly Parser<char, char> SimpleLatinLetterParser = Letter;
+            //SimpleLatinUpperCaseLetterParser.Or(SimpleLatinLowerCaseLetterParser);
 
         // <unsigned numeric literal> ::= <exact numeric literal> | <approximate numeric literal>
         internal static readonly Parser<char, double> UnsignedNumericLiteralParser = ExactNumericLiteralParser
@@ -193,11 +188,13 @@ namespace ProjNet.Wkt
         internal static readonly Parser<char, double> MParser = SignedNumericLiteralParser;
 
         // <letter> ::= <simple Latin letter>|<digit>|<special>
+        // NOTE: This one is very slow comparing to using AnyCharExcept!
         internal static readonly Parser<char, char> LetterParser = OneOf(SimpleLatinLetterParser, DigitParser, SpecialParser);
         // <letters> ::= (<letter>)*
-        internal static readonly Parser<char, string> LettersParser = LetterParser.ManyString();
+        internal static readonly Parser<char, string> LettersParser = AnyCharExcept('\"').ManyString();
+
         // <name> ::= <letters>
-        internal static readonly Parser<char, string> NameParser = OneOf(SimpleLatinLetterParser, DigitParser).ManyString();
+        internal static readonly Parser<char, string> NameParser = SimpleLatinLetterParser.Or(DigitParser).ManyString();
         // <quoted name> ::= <double quote> <name> <double quote>
         internal static readonly Parser<char, string> QuotedNameParser =
             LettersParser.Between(DoubleQuoteParser, DoubleQuoteParser);
@@ -489,186 +486,254 @@ namespace ProjNet.Wkt
         internal static readonly Parser<char, string> CsNameParser = QuotedNameParser;
 
 
+        internal readonly Parser<char, WktAuthority> AuthorityParser;
 
-        // Extra grammar from elements outside the specification document. (Borrowed from WKT 2.x ?)
+        internal readonly Parser<char, WktAxis> AxisParser;
 
-        // AUTHORITY    = 'AUTHORITY' '[' string ',' string ']'
-        internal Parser<char, WktAuthority> AuthorityParser => String("AUTHORITY")
-            .Then(LeftDelimiterParser)
-            .Then(QuotedNameParser, (c, name) => new WktAuthority().SetLeftDelimiter(c).As<WktAuthority>().SetName(name))
-            .Then(WktSeparatorParser.Then(QuotedNameParser), (wktObject, code) => wktObject.SetCode(code))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktAuthority>())
-            .Labelled("WktAuthority");
+        internal readonly Parser<char, WktExtension> ExtensionParser;
 
-        // AXIS         = 'AXIS' '[' string ',' string ']'
-        internal Parser<char, WktAxis> AxisParser => String("AXIS")
-            .Then(LeftDelimiterParser)
-            .Then(QuotedNameParser, (c, name) => new WktAxis(name).SetLeftDelimiter(c))
-            .Then(WktSeparatorParser.Then(NameParser), (wktObject, direction) => wktObject.As<WktAxis>().SetDirection(direction))
-            .Before(RightDelimiterParser)
-            .Labelled("WktAxis");
+        internal readonly Parser<char, WktToWgs84> ToWgs84Parser;
 
-        internal Parser<char, WktExtension> ExtensionParser => String("EXTENSION")
-            .Then(LeftDelimiterParser)
-            .Then(QuotedNameParser, (c, name) => new WktExtension(name).SetLeftDelimiter(c).As<WktExtension>())
-            .Then(WktSeparatorParser.Then(LettersParser.Between(DoubleQuoteParser)), (wktObject, value) => wktObject.SetValue(value))
-            .Before(RightDelimiterParser)
-            .Labelled("WktExtension");
+        internal readonly Parser<char, WktProjection> ProjectionParser;
 
-        // TOWGS84      = 'TOWGS84' '[' float ',' float ',' float ',' float ',' float ',' float ',' float ']'
-        internal Parser<char, WktToWgs84> ToWgs84Parser => String("TOWGS84")
-            .Then(LeftDelimiterParser)
-            .Then(ValueParser, (c, d) => new WktToWgs84().SetDxShift(d).SetLeftDelimiter(c).As<WktToWgs84>() )
-            .Then(WktSeparatorParser.Then(ValueParser), (wktObject, d) => wktObject.SetDyShift(d))
-            .Then(WktSeparatorParser.Then(ValueParser), (wktObject, d) => wktObject.SetDzShift(d))
-            .Then(WktSeparatorParser.Then(ValueParser), (wktObject, d) => wktObject.SetExRotation(d))
-            .Then(WktSeparatorParser.Then(ValueParser), (wktObject, d) => wktObject.SetEyRotation(d))
-            .Then(WktSeparatorParser.Then(ValueParser), (wktObject, d) => wktObject.SetEzRotation(d))
-            .Then(WktSeparatorParser.Then(ValueParser), (wktObject, d) => wktObject.SetPpmScaling(d))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktToWgs84>())
-            .Labelled("WktToWgs84");
+        internal readonly Parser<char, WktParameter> ParameterParser;
+
+        internal readonly Parser<char, WktEllipsoid> EllipsoidParser;
+        internal readonly Parser<char, WktSpheroid> SpheroidParser;
+
+        internal readonly Parser<char, WktPrimeMeridian> PrimeMeridianParser;
+
+        internal readonly Parser<char, WktUnit> UnitParser;
+
+        internal readonly Parser<char, WktDatum> DatumParser;
+
+        internal readonly Parser<char, WktGeographicCoordinateSystem> GeographicCsParser;
+        internal readonly Parser<char, WktGeocentricCoordinateSystem> GeocentricCsParser;
+        internal readonly Parser<char, WktProjectedCoordinateSystem> ProjectedCsParser;
+        internal readonly Parser<char, WktCoordinateSystem> SpatialReferenceSystemParser;
 
 
+        /// <summary>
+        /// Constructor initializing all parsers.
+        /// </summary>
+        public WktParser()
+        {
+            // AUTHORITY    = 'AUTHORITY' '[' string ',' string ']'
+            AuthorityParser =
+                Map((kw, ld, name, code, rd) => new WktAuthority(name, code, kw,ld, rd),
+                    String("AUTHORITY"),
+                    LeftDelimiterParser,
+                    QuotedNameParser,
+                    WktSeparatorParser.Then(QuotedNameParser),
+                    RightDelimiterParser)
+                .Labelled("WktAuthority");
+
+            // AXIS         = 'AXIS' '[' string ',' string ']'
+            AxisParser =
+                Map((kw, ld,name, direction, rd) => new WktAxis(name, direction, kw, ld, rd),
+                    String("AXIS"),
+                LeftDelimiterParser,
+                QuotedNameParser,
+                WktSeparatorParser.Then(NameParser),
+                RightDelimiterParser)
+                .Labelled("WktAxis");
+
+            ExtensionParser =
+                Map((kw, ld,name, direction, rd) => new WktExtension(name, direction, kw, ld, rd),
+                String("EXTENSION"),
+                LeftDelimiterParser,
+                QuotedNameParser,
+                WktSeparatorParser.Then(LettersParser.Between(DoubleQuoteParser)),
+                RightDelimiterParser)
+                .Labelled("WktExtension");
+
+            // TOWGS84      = 'TOWGS84' '[' float ',' float ',' float ',' float ',' float ',' float ',' float ']'
+            // Note: Map only takes 8 parsers max. So combining sub parsers first for shifts and rotations.
+           ToWgs84Parser =
+               Map((kw, ld, shifts, rotations, ppm, rd) =>
+                           new WktToWgs84(shifts.dx, shifts.dy, shifts.dz,
+                                            rotations.ex, rotations.ey, rotations.ez, ppm,
+                                            "", kw, ld, rd),
+                   String("TOWGS84"),
+                 LeftDelimiterParser,
+                 Map((dx, dy, dz) => (dx, dy, dz),
+                         ValueParser,
+                         WktSeparatorParser.Then(ValueParser),
+                         WktSeparatorParser.Then(ValueParser)),
+                   Map((ex, ey, ez) => (ex, ey, ez),
+                         WktSeparatorParser.Then(ValueParser),
+                         WktSeparatorParser.Then(ValueParser),
+                         WktSeparatorParser.Then(ValueParser)),
+                 WktSeparatorParser.Then(ValueParser),
+                 RightDelimiterParser)
+                 .Labelled("WktToWgs84");
+
+            // <projection> ::= PROJECTION <left delimiter> <projection name> <right delimiter>
+            ProjectionParser =
+                Map((kw, ld, name, authority, rd) =>
+                            new WktProjection(name, authority.GetValueOrDefault(), kw, ld, rd),
+                String("PROJECTION"),
+                LeftDelimiterParser,
+                ProjectionNameParser,
+                WktSeparatorParser.Then(AuthorityParser).Optional(),
+                RightDelimiterParser)
+                .Labelled("WktProjection");
+
+            // <parameter> ::= PARAMETER <left delimiter> <parameter name> <comma> <value> <right delimiter>
+            ParameterParser =
+                Map((kw, ld, name, value, rd) => new WktParameter(name, value, kw, ld, rd),
+                String("PARAMETER"),
+                LeftDelimiterParser,
+                ParameterNameParser,
+                WktSeparatorParser.Then(ValueParser),
+                RightDelimiterParser)
+                .Labelled("WktParameter");
+
+            // Note: Ellipsoid and Spheroid have the same parser and object implementation. Separating them for clarity.
+            // <ellipsoid> ::= ELLIPSOID <left delimiter> <ellipsoid name> <comma> <semi-major axis> <comma> <inverse flattening> <right delimiter>
+            EllipsoidParser =
+                Map((kw,ld, name, axis, flat, authority, rd) =>
+                                new WktEllipsoid(name, axis, flat, authority.GetValueOrDefault(), kw, ld, rd),
+                String("ELLIPSOID"),
+                LeftDelimiterParser,
+                SpheroidNameParser,
+                WktSeparatorParser.Then(SemiMajorAxisParser),
+                WktSeparatorParser.Then(InverseFlatteningParser),
+                WktSeparatorParser.Then(AuthorityParser).Optional(),
+                RightDelimiterParser)
+                .Labelled("WktEllipsoid");
+            // <spheroid> ::= SPHEROID <left delimiter> <spheroid name> <comma> <semi-major axis> <comma> <inverse flattening> <right delimiter>
+            SpheroidParser =
+                Map((kw,ld, name, axis, flat, authority, rd) =>
+                                new WktSpheroid(name, axis, flat, authority.GetValueOrDefault(), kw, ld, rd),
+                String("SPHEROID"),
+                LeftDelimiterParser,
+                SpheroidNameParser,
+                WktSeparatorParser.Then(SemiMajorAxisParser),
+                WktSeparatorParser.Then(InverseFlatteningParser),
+                WktSeparatorParser.Then(AuthorityParser).Optional(),
+                RightDelimiterParser)
+                .Labelled("WktSpheroid");
+
+            // <prime meridian> ::= PRIMEM <left delimiter> <prime meridian name> <comma> <longitude> [<comma> <authority>] <right delimiter>
+            PrimeMeridianParser =
+                Map((kw, ld, name, longitude, authority, rd)
+                            => new WktPrimeMeridian(name, longitude, authority.GetValueOrDefault(), kw, ld, rd),
+                    String("PRIMEM"),
+                    LeftDelimiterParser,
+                    PrimeMeridianNameParser,
+                    WktSeparatorParser.Then(LongitudeParser),
+                    WktSeparatorParser.Then(AuthorityParser).Optional(),
+                    RightDelimiterParser)
+                    .Labelled("WktPrimeMeridian");
+
+            // <unit> ::= UNIT <left delimiter> <unit name> <comma> <conversion factor> [<comma> <authority>] <right delimiter>
+            UnitParser =
+                Map((kw, ld, name, factor, authority, rd) =>
+                        {
+                            switch (name)
+                            {
+                                case "degree":
+                                    return new WktAngularUnit(name, factor, authority.GetValueOrDefault(), kw, ld, rd);
+                                   break;
+                                case "metre":
+                                    return new WktLinearUnit(name, factor, authority.GetValueOrDefault(), kw, ld, rd);
+                                    break;
+                                default:
+                                    return new WktUnit(name, factor, authority.GetValueOrDefault(), kw, ld, rd);
+                            }
+                        },
+            String("UNIT"),
+                   LeftDelimiterParser,
+                   UnitNameParser,
+                   WktSeparatorParser.Then(ConversionFactorParser),
+                   WktSeparatorParser.Then(AuthorityParser).Optional(),
+                   RightDelimiterParser)
+                .Labelled("WktUnit");
 
 
-        // <projection> ::= PROJECTION <left delimiter> <projection name> <right delimiter>
-        internal Parser<char, WktProjection> ProjectionParser => String("PROJECTION")
-            .Then(LeftDelimiterParser)
-            .Then(ProjectionNameParser, ((c, name) => new WktProjection(name).SetLeftDelimiter(c).As<WktProjection>()))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktProjection>() )
-            .Labelled("WktProjection");
-
-        // <parameter> ::= PARAMETER <left delimiter> <parameter name> <comma> <value> <right delimiter>
-        internal Parser<char, WktParameter> ParameterParser => String("PARAMETER")
-            .Then(LeftDelimiterParser)
-            .Then(ParameterNameParser, (c, name) => new WktParameter(name).SetLeftDelimiter(c).As<WktParameter>() )
-            .Then(WktSeparatorParser.Then(ValueParser), (wktObject, value) => wktObject.SetValue(value))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktParameter>() )
-            .Labelled("WktParameter");
-
-        // <ellipsoid> ::= ELLIPSOID <left delimiter> <ellipsoid name> <comma> <semi-major axis> <comma> <inverse flattening> <right delimiter>
-        internal Parser<char, WktEllipsoid> ElipsoidParser => String("ELLIPSOID")
-            .Then(LeftDelimiterParser)
-            .Then(SpheroidNameParser, (c, name) => new WktEllipsoid(name).SetLeftDelimiter(c).As<WktEllipsoid>() )
-            .Then(WktSeparatorParser.Then(SemiMajorAxisParser), (wktObject, axis) => wktObject.SetSemiMajorAxis(axis))
-            .Then(WktSeparatorParser.Then(InverseFlatteningParser), (wktObject, inverse) => wktObject.SetInverseFlattening(inverse))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktEllipsoid>())
-            .Labelled("WktEllipsoid");
-        // <spheroid> ::= SPHEROID <left delimiter> <spheroid name> <comma> <semi-major axis> <comma> <inverse flattening> <right delimiter>
-        internal Parser<char, WktSpheroid> SpheroidParser => String("SPHEROID")
-            .Then(LeftDelimiterParser)
-            .Then(SpheroidNameParser, (c, name) => new WktSpheroid(name).SetLeftDelimiter(c).As<WktSpheroid>() )
-            .Then(WktSeparatorParser.Then(SemiMajorAxisParser), (wktObject, axis) => wktObject.SetSemiMajorAxis(axis))
-            .Then(WktSeparatorParser.Then(InverseFlatteningParser), (wktObject, inverse) => wktObject.SetInverseFlattening(inverse))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktSpheroid>())
-            .Labelled("WktSpheroid");
-
-        // <prime meridian> ::= PRIMEM <left delimiter> <prime meridian name> <comma> <longitude> [<comma> <authority>] <right delimiter>
-        internal Parser<char, WktPrimeMeridian> PrimeMeridianParser => String("PRIMEM")
-            .Then(LeftDelimiterParser)
-            .Then(PrimeMeridianNameParser, (c, name) => new WktPrimeMeridian(name).SetLeftDelimiter(c).As<WktPrimeMeridian>() )
-            .Then(WktSeparatorParser.Then(LongitudeParser), (wktObject, longitude) => wktObject.SetLongitude(longitude))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktPrimeMeridian>())
-            .Labelled("WktPrimeMeridian");
+            // <datum> ::= DATUM <left delimiter> <datum name> <comma> <spheroid> <right delimiter>
+            // Note: UnitTests showed that TOWGS84 is usable inside a DATUM element.
+            DatumParser =
+                Map((kw, ld, name, spheroid, towgs84, authority, rd) =>
+                                    new WktDatum(name, spheroid, towgs84.GetValueOrDefault(), authority.GetValueOrDefault(), kw, ld, rd),
+                    String("DATUM"),
+                    LeftDelimiterParser,
+                    DatumNameParser,
+                    WktSeparatorParser.Then(SpheroidParser),
+                    Try(WktSeparatorParser.Then(ToWgs84Parser)).Optional(),
+                    WktSeparatorParser.Then(AuthorityParser).Optional(),
+                    RightDelimiterParser)
+                .Labelled("WktDatum");
 
 
-        // <linear unit> ::= <unit>
-        internal Parser<char, WktLinearUnit> LinearUnitParser => String("UNIT")
-            .Then(LeftDelimiterParser)
-            .Then(CIString("metre").Between(DoubleQuoteParser), (c, name) => new WktLinearUnit(name).SetLeftDelimiter(c).As<WktLinearUnit>() )
-            .Then(WktSeparatorParser.Then(ConversionFactorParser), (wktObject, factor)  => wktObject.SetConversionFactor(factor))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktLinearUnit>())
-                .Labelled("WktLinearUnit");
-
-        // <angular unit> ::= <unit>
-        internal Parser<char, WktAngularUnit> AngularUnitParser => String("UNIT")
-            .Then(LeftDelimiterParser)
-            .Then(CIString("degree").Between(DoubleQuoteParser), (c, name) => new WktAngularUnit(name).SetLeftDelimiter(c).As<WktAngularUnit>() )
-            .Then(WktSeparatorParser.Then(ConversionFactorParser), (wktObject, factor)  => wktObject.SetConversionFactor(factor))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktAngularUnit>())
-            .Labelled("WktAngularUnit");
-
-        // <unit> ::= UNIT <left delimiter> <unit name> <comma> <conversion factor> [<comma> <authority>] <right delimiter>
-        internal Parser<char, WktUnit> GenericUnitParser => String("UNIT")
-            .Then(LeftDelimiterParser)
-            .Then(UnitNameParser, (c, name) => new WktUnit(name).SetLeftDelimiter(c).As<WktUnit>() )
-            .Then(WktSeparatorParser.Then(ConversionFactorParser), (wktObject, factor)  => wktObject.SetConversionFactor(factor))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktUnit>())
-            .Labelled("WktUnit");
-        internal Parser<char, WktUnit> UnitParser => OneOf(
-            Try(AngularUnitParser.Cast<WktUnit>()),
-            Try(LinearUnitParser.Cast<WktUnit>()),
-            Try(GenericUnitParser));
-
-        // <datum> ::= DATUM <left delimiter> <datum name> <comma> <spheroid> <right delimiter>
-        // Note: UnitTests showed that TOWGS84 is usable inside a DATUM element.
-        internal Parser<char, WktDatum> DatumParser => String("DATUM")
-            .Then(LeftDelimiterParser)
-            .Then(DatumNameParser, (c, name) => new WktDatum(name).SetLeftDelimiter(c).As<WktDatum>() )
-            .Then(WktSeparatorParser.Then(SpheroidParser), (wktObject, spheroid) => wktObject.SetSpheroid(spheroid))
-            .Then(Try(WktSeparatorParser.Then(ToWgs84Parser)).Optional(), (wktObject, towgs84) => wktObject.SetToWgs84(towgs84.GetValueOrDefault()))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktDatum>() )
-            .Labelled("WktDatum");
+            // <geographic cs> ::= GEOGCS <left delimiter> <csname>
+            //                              <comma> <datum> <comma> <prime meridian>
+            //                              <comma> <angular unit> (<comma> <linear unit> )
+            //                            <right delimiter>
+            GeographicCsParser =
+                Map((kw, ld,name, datum, meridian, o, rd) =>
+                                new WktGeographicCoordinateSystem(name, datum, meridian, o.unit.GetValueOrDefault(), o.axes, o.authority.GetValueOrDefault(), kw, ld, rd),
+                    String("GEOGCS"),
+                    LeftDelimiterParser,
+                    CsNameParser,
+                    WktSeparatorParser.Then(DatumParser),
+                    WktSeparatorParser.Then(PrimeMeridianParser),
+                    Map((unit, axes,authority) =>
+                                        (unit, axes, authority),
+                        WktSeparatorParser.Then(UnitParser).Optional(),
+                        Try(WktSeparatorParser.Then(AxisParser)).Many(),
+                        WktSeparatorParser.Then(AuthorityParser).Optional()),
+                    RightDelimiterParser)
+                .Labelled("WktGeographicCoordinateSystem");
 
 
-        // <geographic cs> ::= GEOGCS <left delimiter> <csname>
-        //                              <comma> <datum> <comma> <prime meridian>
-        //                              <comma> <angular unit> (<comma> <linear unit> )
-        //                            <right delimiter>
-        internal Parser<char, WktGeographicCoordinateSystem> GeographicCsParser => String("GEOGCS")
-            .Then(LeftDelimiterParser)
-            .Then(CsNameParser, (c, name) => new WktGeographicCoordinateSystem(name).SetLeftDelimiter(c).As<WktGeographicCoordinateSystem>())
-            .Then(WktSeparatorParser.Then(DatumParser), (wktObject, datum) => wktObject.SetDatum(datum))
-            .Then(WktSeparatorParser.Then(PrimeMeridianParser),(wktObject, meridian) => wktObject.SetPrimeMeridian(meridian))
-            .Then(WktSeparatorParser.Then(UnitParser).Optional(), (wktObject, unit) => wktObject.SetUnit(unit.GetValueOrDefault()))
-            .Then(Try(WktSeparatorParser.Then(AxisParser)).Many(), (wktObject, axis) => wktObject.SetAxes(axis))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), ((wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault())))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktGeographicCoordinateSystem>())
-            .Labelled("WktGeographicCoordinateSystem");
+            // <geocentric cs> ::= GEOCCS <left delimiter> <name> <comma> <datum> <comma> <prime meridian>
+            //                                             <comma> <linear unit> <right delimiter>
+            GeocentricCsParser =
+                Map((kw, ld, name, datum, meridian, unit, o, rd) =>
+                        new WktGeocentricCoordinateSystem(name, datum, meridian, unit, o.axes, o.authority.GetValueOrDefault(),
+                            kw, ld, rd ),
+                String("GEOCCS").Or(String("GEOCS")),
+                LeftDelimiterParser,
+                QuotedNameParser,
+                WktSeparatorParser.Then(DatumParser),
+                WktSeparatorParser.Then(PrimeMeridianParser),
+                WktSeparatorParser.Then(UnitParser),
+                Map((axes, authority) => (axes, authority),
+                    Try(WktSeparatorParser.Then(AxisParser)).Many(),
+                    WktSeparatorParser.Then(AuthorityParser).Optional()),
+                RightDelimiterParser)
+                .Labelled("WktGeocentricCoordinateSystem");
 
+            // <projected cs> ::= PROJCS <left delimiter> <csname> <comma> <geographic cs> <comma> <projection>
+            //                           (<comma> <parameter> )* <comma> <linear unit> <right delimiter>
+            ProjectedCsParser =
+                Map((kw, ld, name, geogcs, projection, o, rd) =>
+                            new WktProjectedCoordinateSystem(name, geogcs, projection,
+                                                                o.parameters, o.unit.GetValueOrDefault(), o.axes, o.extension.GetValueOrDefault(), o.authority.GetValueOrDefault(),
+                                                                kw, ld, rd),
+                    String("PROJCS"),
+                    LeftDelimiterParser,
+                    CsNameParser,
+                    WktSeparatorParser.Then(GeographicCsParser),
+                    WktSeparatorParser.Then(ProjectionParser),
+                    Map((parameters,unit,axes,extension,authority )
+                                    => (parameters, unit, axes, extension, authority),
+                        Try(WktSeparatorParser.Then(ParameterParser)).Many(),
+                        Try(WktSeparatorParser.Then(UnitParser)).Optional(),
+                        Try(WktSeparatorParser.Then(AxisParser)).Many(),
+                        Try(WktSeparatorParser.Then(ExtensionParser)).Optional(),
+                        WktSeparatorParser.Then(AuthorityParser).Optional()),
+                    RightDelimiterParser)
+                .Labelled("WktProjectedCoordinateSystem");
 
-        // <geocentric cs> ::= GEOCCS <left delimiter> <name> <comma> <datum> <comma> <prime meridian>
-        //                                             <comma> <linear unit> <right delimiter>
-        internal Parser<char, WktGeocentricCoordinateSystem> GeocentricCsParser => String("GEOCCS").Or(String("GEOCS"))
-            .Then(LeftDelimiterParser)
-            .Then(QuotedNameParser, (c, name) => new WktGeocentricCoordinateSystem(name).SetLeftDelimiter(c).As<WktGeocentricCoordinateSystem>() )
-            .Then(WktSeparatorParser.Then(DatumParser), (wktObject, datum) => wktObject.SetDatum(datum))
-            .Then(WktSeparatorParser.Then(PrimeMeridianParser), (wktObject, meridian) => wktObject.SetPrimeMeridian(meridian))
-            .Then(WktSeparatorParser.Then(LinearUnitParser), (wktObject, unit) => wktObject.SetLinearUnit(unit))
-            .Then(Try(WktSeparatorParser.Then(AxisParser)).Many(), (wktObject, axes) => wktObject.SetAxes(axes))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktGeocentricCoordinateSystem>() )
-            .Labelled("WktGeocentricCoordinateSystem");
-
-        // <projected cs> ::= PROJCS <left delimiter> <csname> <comma> <geographic cs> <comma> <projection>
-        //                           (<comma> <parameter> )* <comma> <linear unit> <right delimiter>
-        internal Parser<char, WktProjectedCoordinateSystem> ProjectedCsParser => String("PROJCS")
-            .Then(LeftDelimiterParser)
-            .Then(CsNameParser, (c, name) => new WktProjectedCoordinateSystem(name).SetLeftDelimiter(c).As<WktProjectedCoordinateSystem>())
-            .Then(WktSeparatorParser.Then(GeographicCsParser), (wktObject, csSystem) => wktObject.SetGeographicCoordinateSystem(csSystem))
-            .Then(WktSeparatorParser.Then(ProjectionParser), (wktObject, projection) => wktObject.SetProjection(projection))
-            .Then(Try(WktSeparatorParser.Then(ParameterParser)).Many(), (wktObject, parameters) => wktObject.SetParameters(parameters))
-            .Then(Try(WktSeparatorParser.Then(UnitParser)).Optional(), (wktObject, unit) => wktObject.SetUnit(unit.GetValueOrDefault()))
-            .Then(Try(WktSeparatorParser.Then(AxisParser)).Many(), (wktObject, axes) => wktObject.SetAxes(axes))
-            .Then(Try(WktSeparatorParser.Then(ExtensionParser)).Optional(), (wktObject, extension) => wktObject.SetExtension(extension.GetValueOrDefault()))
-            .Then(WktSeparatorParser.Then(AuthorityParser).Optional(), (wktObject, authority) => wktObject.SetAuthority(authority.GetValueOrDefault()))
-            .Then(RightDelimiterParser, (wktObject, c) => wktObject.SetRightDelimiter(c).As<WktProjectedCoordinateSystem>() )
-            .Labelled("WktProjectedCoordinateSystem");
-
-        // <spatial reference system> ::= <projected cs> | <geographic cs> | <geocentric cs>
-        internal Parser<char, WktCoordinateSystem> SpatialReferenceSystemParser => OneOf(
-            Try(ProjectedCsParser.Cast<WktCoordinateSystem>()),
-            Try(GeographicCsParser.Cast<WktCoordinateSystem>()),
-            Try(GeocentricCsParser.Cast<WktCoordinateSystem>())
-        ).Labelled("WktCoordinateSystem");
-
+            // <spatial reference system> ::= <projected cs> | <geographic cs> | <geocentric cs>
+            SpatialReferenceSystemParser =
+                Try(ProjectedCsParser.Cast<WktCoordinateSystem>()).Or(
+                Try(GeographicCsParser.Cast<WktCoordinateSystem>()).Or(
+                Try(GeocentricCsParser.Cast<WktCoordinateSystem>()))
+            ).Labelled("WktCoordinateSystem");
+        }
     }
 }

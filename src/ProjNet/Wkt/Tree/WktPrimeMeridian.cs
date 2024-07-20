@@ -25,48 +25,28 @@ namespace ProjNet.Wkt.Tree
 
 
         /// <summary>
-        /// Constructor with optional a name.
+        /// Constructor for the WktPrimeMeridian class.
         /// </summary>
         /// <param name="name"></param>
-        public WktPrimeMeridian(string name = null)
-        {
-            Name = name;
-        }
-
-
-        /// <summary>
-        /// Setter method for Name.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public WktPrimeMeridian SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Longitude.
-        /// </summary>
         /// <param name="longitude"></param>
-        /// <returns></returns>
-        public WktPrimeMeridian SetLongitude(double longitude)
+        /// <param name="authority"></param>
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktPrimeMeridian(string name, double longitude, WktAuthority authority,
+                                string keyword = "PRIMEM", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
+            Name = name;
             Longitude = longitude;
-            return this;
+            Authority = authority;
         }
 
         /// <summary>
-        /// Setter method for Authority.
+        /// Implements IEquatable.Equals checking the whole tree.
         /// </summary>
-        /// <param name="authority"></param>
+        /// <param name="other"></param>
         /// <returns></returns>
-        public WktPrimeMeridian SetAuthority(WktAuthority authority)
-        {
-            Authority = authority;
-            return this;
-        }
-
         public bool Equals(WktPrimeMeridian other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -74,6 +54,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && Longitude.Equals(other.Longitude) && Equals(Authority, other.Authority);
         }
 
+        /// <summary>
+        /// Overriding base Equals method.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -82,6 +67,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktPrimeMeridian) obj);
         }
 
+        /// <summary>
+        /// Overriding base GetHashCode method.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

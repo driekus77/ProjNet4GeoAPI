@@ -7,6 +7,12 @@ namespace ProjNet.Wkt.Tree
     public interface IWktObject
     {
         /// <summary>
+        /// The Keyword as set and used by the WktParser.
+        /// </summary>
+        string Keyword { get; }
+
+
+        /// <summary>
         /// Set Left Delimiter. (For semantic checking).
         /// </summary>
         /// <param name="leftDelimiter"></param>
@@ -19,7 +25,6 @@ namespace ProjNet.Wkt.Tree
         /// <param name="rightDelimiter"></param>
         /// <returns></returns>
         IWktObject SetRightDelimiter(char rightDelimiter);
-
 
         /// <summary>
         /// Cast function to reach the "lower" interfaces.

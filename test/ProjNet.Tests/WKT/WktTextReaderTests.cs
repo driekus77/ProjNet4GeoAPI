@@ -12,6 +12,9 @@ namespace ProjNET.Tests.WKT;
 
 public class WktTextReaderTests
 {
+    private static WktParser parser = new WktParser();
+
+
     [Test]
     public void TestAxisParser()
     {
@@ -104,7 +107,7 @@ public class WktTextReaderTests
 
 
     [Test]
-    public void TestProjectedCoordinateSystem_EPSG_2918()
+    public void TestCoordinateSystem_EPSG_2918()
     {
         string parseText01 =
             "PROJCS[\"NAD83(HARN) / Texas Central (ftUS)\", \n" +
@@ -149,7 +152,7 @@ public class WktTextReaderTests
 
 
     [Test]
-    public void TestProjectedCoordinateSystem_EPSG_3067()
+    public void TestCoordinateSystem_EPSG_3067()
     {
         string parseText01 =
             "PROJCS[\"ETRS89 / TM35FIN(E,N)\"," +
@@ -292,23 +295,43 @@ public class WktTextReaderTests
     }
 
     [Test]
-    public void TestParseAllWKTs_in_CSV()
+    public void TestCoordinateSystem_ESRI_4305()
+    {
+        string parseText01 = "GEOGCS[\"GCS_Voirol_Unifie_1960 (deprecated)\",\n" +
+                             "  DATUM[\"D_Voirol_Unifie_1960\",\n" +
+                             "      SPHEROID[\"Clarke 1880 (RGS)\",6378249.145,293.465,AUTHORITY[\"EPSG\",\"7012\"]],\n" +
+                             "      AUTHORITY[\"ESRI\",\"106011\"]],\n" +
+                             "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],\n" +
+                             "  UNIT[\"grad\",0.0157079632679489,AUTHORITY[\"EPSG\",\"9105\"]],\n" +
+                             "  AXIS[\"Latitude\",NORTH],\n" +
+                             "  AXIS[\"Longitude\",EAST],\n" +
+                             "  AUTHORITY[\"ESRI\",\"4305\"]]";
+
+        // Act
+        var result = parser.SpatialReferenceSystemParser.ParseOrThrow(parseText01);
+
+        // Assert
+        Assert.NotNull(result);
+    }
+
+    [Test]
+    public void ParseAllWKTs()
     {
         int parseCount = 0;
         foreach (var wkt in SRIDReader.GetSrids())
         {
-            var reader01 = new WktTextReader(new StringReader(wkt.Wkt));
-            var result01 = reader01.ReadToEnd();
-            var cs01 = result01.GetValueOrDefault();
-            Assert.IsNotNull(cs01, "Could not parse WKT: " + wkt.Wkt);
+            var result01 = parser.SpatialReferenceSystemParser.Parse(wkt.Wkt);
             Assert.That(result01.Success, Is.True);
+            var cs01 = result01.Value;
+            Assert.IsNotNull(cs01, "Could not parse WKT: " + wkt.Wkt);
 
-            using var reader02 = new WktTextReader(new StringReader(wkt.Wkt));//.Replace("[", "(").Replace("]", ")")));
-            var result02 = reader02.ReadToEnd();
+            //@TODO: Create outputWriter and formater for changing delimiters in right context: .Replace("[", "(").Replace("]", ")")));
+            var result02 = parser.SpatialReferenceSystemParser.Parse(wkt.Wkt);
             Assert.That(result02.Success, Is.True);
-            var cs02 = result02.GetValueOrDefault();
+            var cs02 = result02.Value;
 
-            //Assert.That(cs01.Equals(cs02), Is.True);
+            // Comparing whole tree using IEquatable.Equals(...)
+            Assert.That(cs01.Equals(cs02), Is.True);
             parseCount++;
         }
         Assert.That(parseCount, Is.GreaterThan(2671), "Not all WKT was parsed");
@@ -318,7 +341,7 @@ public class WktTextReaderTests
     /// Test parsing of a <see cref="ProjectedCoordinateSystem"/> from WKT
     /// </summary>
     [Test]
-    public void TestProjectedCoordinateSystem_EPSG27700_UnitBeforeProjection()
+    public void TestCoordinateSystem_EPSG_27700_UnitBeforeProjection()
     {
         const string wkt = "PROJCS[\"OSGB 1936 / British National Grid\",\n" +
                            "    GEOGCS[\"OSGB 1936\",\n" +
@@ -384,10 +407,10 @@ public class WktTextReaderTests
         Assert.AreEqual(8901, gcs.PrimeMeridian.Authority.Code);
 
         //CheckUnit(gcs.AngularUnit, "degree", 0.0174532925199433, "EPSG", 9122);
-        Assert.AreEqual("degree", gcs.Unit.Name);
-        Assert.AreEqual(0.0174532925199433, gcs.Unit.ConversionFactor);
-        Assert.AreEqual("EPSG", gcs.Unit.Authority.Name);
-        Assert.AreEqual(9122, gcs.Unit.Authority.Code);
+        Assert.AreEqual("degree", gcs.AngularUnit.Name);
+        Assert.AreEqual(0.0174532925199433, gcs.AngularUnit.ConversionFactor);
+        Assert.AreEqual("EPSG", gcs.AngularUnit.Authority.Name);
+        Assert.AreEqual(9122, gcs.AngularUnit.Authority.Code);
 
         //Assert.AreEqual("Transverse_Mercator", pcs.Projection.ClassName, "Projection Classname");
         Assert.AreEqual("Transverse_Mercator", pcs.Projection.Name);
@@ -416,7 +439,7 @@ public class WktTextReaderTests
 
 
     [Test]
-    public void TestCoordinateSystem_EPSG28992()
+    public void TestCoordinateSystem_EPSG_28992()
     {
         // Arrange
         string text = @"PROJCS[""Amersfoort / RD New"", GEOGCS[""Amersfoort"",

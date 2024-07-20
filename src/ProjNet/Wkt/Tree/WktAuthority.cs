@@ -16,18 +16,23 @@ namespace ProjNet.Wkt.Tree
         /// <summary>
         /// Direction for this Authority.
         /// </summary>
-        public long Code { get; set; }
+        public long Code { get; internal set; }
 
 
         /// <summary>
-        /// Setter for Name.
+        /// Constructor for WktAuthority.
         /// </summary>
         /// <param name="name"></param>
-        /// <returns></returns>
-        public WktAuthority SetName(string name)
+        /// <param name="code"></param>
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktAuthority(string name = null, string code = null,
+                            string keyword = "AUTHORITY", char leftDelimiter = '[', char rightDelimiter = ']' )
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
             Name = name;
-            return this;
+            SetCode(code);
         }
 
         /// <summary>
@@ -45,7 +50,11 @@ namespace ProjNet.Wkt.Tree
             return this;
         }
 
-
+        /// <summary>
+        /// IEquatable.Equals implementation.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(WktAuthority other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -53,6 +62,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && Code == other.Code;
         }
 
+        /// <summary>
+        /// Basic Equals override.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -61,6 +75,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktAuthority) obj);
         }
 
+        /// <summary>
+        /// Basic GetHashCode override.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

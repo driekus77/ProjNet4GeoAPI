@@ -13,9 +13,15 @@ namespace ProjNet.Wkt.Tree
         /// </summary>
         /// <param name="name"></param>
         /// <param name="direction"></param>
-        public WktAxis(string name = null)
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktAxis(string name, string direction,
+                        string keyword = "AXIS", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
             Name = name;
+            SetDirection(direction);
         }
 
 
@@ -30,16 +36,7 @@ namespace ProjNet.Wkt.Tree
         public AxisOrientationEnum Direction { get; set; }
 
 
-        /// <summary>
-        /// Name Setter method.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public WktAxis SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
+
 
 
         /// <summary>
@@ -57,6 +54,11 @@ namespace ProjNet.Wkt.Tree
             return this;
         }
 
+        /// <summary>
+        /// IEquatable.Equals implementation for checking the whole tree except keywords and delimiters.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(WktAxis other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -64,6 +66,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && Direction == other.Direction;
         }
 
+        /// <summary>
+        /// Basic override of Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -72,6 +79,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktAxis) obj);
         }
 
+        /// <summary>
+        /// Basic override of GetHashCode.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

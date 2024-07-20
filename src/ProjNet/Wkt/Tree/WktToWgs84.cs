@@ -47,102 +47,34 @@ namespace ProjNet.Wkt.Tree
 
 
         /// <summary>
-        /// Constructor optionaly setting the Description.
+        /// Constructor optionally setting the Description.
         /// </summary>
         /// <param name="description"></param>
-        public WktToWgs84(string description = default)
+        public WktToWgs84(double dxShift, double dyShift, double dzShift,
+                            double exRotation, double eyRotation, double ezRotation,
+                            double ppmScaling, string description = default,
+                            string keyword = "TOWGS84", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
+            DxShift = dxShift;
+            DyShift = dyShift;
+            DzShift = dzShift;
+
+            ExRotation = exRotation;
+            EyRotation = eyRotation;
+            EzRotation = ezRotation;
+
+            PpmScaling = ppmScaling;
+
             Description = description;
         }
 
-        /// <summary>
-        /// SetDxShift setter method.
-        /// </summary>
-        /// <param name="shift"></param>
-        /// <returns></returns>
-        public WktToWgs84 SetDxShift(double shift)
-        {
-            DxShift = shift;
-            return this;
-        }
 
         /// <summary>
-        /// SetDyShift setter method.
+        /// IEquatable.Equals implementation checking the whole tree.
         /// </summary>
-        /// <param name="shift"></param>
+        /// <param name="other"></param>
         /// <returns></returns>
-        public WktToWgs84 SetDyShift(double shift)
-        {
-            DyShift = shift;
-            return this;
-        }
-
-        /// <summary>
-        /// SetDzShift setter method.
-        /// </summary>
-        /// <param name="shift"></param>
-        /// <returns></returns>
-        public WktToWgs84 SetDzShift(double shift)
-        {
-            DzShift = shift;
-            return this;
-        }
-
-        /// <summary>
-        /// SetExRotation setter method.
-        /// </summary>
-        /// <param name="rotation"></param>
-        /// <returns></returns>
-        public WktToWgs84 SetExRotation(double rotation)
-        {
-            ExRotation = rotation;
-            return this;
-        }
-
-        /// <summary>
-        /// SetEyRotation setter method.
-        /// </summary>
-        /// <param name="rotation"></param>
-        /// <returns></returns>
-        public WktToWgs84 SetEyRotation(double rotation)
-        {
-            EyRotation = rotation;
-            return this;
-        }
-
-        /// <summary>
-        /// SetEzRotation setter method.
-        /// </summary>
-        /// <param name="rotation"></param>
-        /// <returns></returns>
-        public WktToWgs84 SetEzRotation(double rotation)
-        {
-            EzRotation = rotation;
-            return this;
-        }
-
-        /// <summary>
-        /// SetPpmScaling setter method.
-        /// </summary>
-        /// <param name="ppm"></param>
-        /// <returns></returns>
-        public WktToWgs84 SetPpmScaling(double ppm)
-        {
-            PpmScaling = ppm;
-            return this;
-        }
-
-        /// <summary>
-        /// SetDescription setter method.
-        /// </summary>
-        /// <param name="description"></param>
-        /// <returns></returns>
-        public WktToWgs84 SetDescription(string description)
-        {
-            Description = description;
-            return this;
-        }
-
         public bool Equals(WktToWgs84 other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -150,6 +82,11 @@ namespace ProjNet.Wkt.Tree
             return DxShift.Equals(other.DxShift) && DyShift.Equals(other.DyShift) && DzShift.Equals(other.DzShift) && ExRotation.Equals(other.ExRotation) && EyRotation.Equals(other.EyRotation) && EzRotation.Equals(other.EzRotation) && PpmScaling.Equals(other.PpmScaling) && Description == other.Description;
         }
 
+        /// <summary>
+        /// Basic override of Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -158,6 +95,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktToWgs84) obj);
         }
 
+        /// <summary>
+        /// Basic override of GetHashCode.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

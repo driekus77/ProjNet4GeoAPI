@@ -20,23 +20,15 @@ namespace ProjNet.Wkt.Tree
         /// Constructor for CoordinateSystem.
         /// </summary>
         /// <param name="name"></param>
-        public WktCoordinateSystem(string name = null)
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktCoordinateSystem(string name,
+                                    string keyword, char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
             Name = name;
         }
-
-
-        /// <summary>
-        /// Setter method for Name.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public virtual WktCoordinateSystem SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
-
 
     }
 }

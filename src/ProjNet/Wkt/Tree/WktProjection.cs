@@ -23,36 +23,23 @@ namespace ProjNet.Wkt.Tree
         /// Constructor for WKT Projection element.
         /// </summary>
         /// <param name="name"></param>
-        public WktProjection(string name = null)
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktProjection(string name, WktAuthority authority,
+                                string keyword = "PROJECTION", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
             Name = name;
-        }
-
-
-        /// <summary>
-        /// Setter for Name.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public WktProjection SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
-
-
-        /// <summary>
-        /// Setter for Authority.
-        /// </summary>
-        /// <param name="authority"></param>
-        /// <returns></returns>
-        public WktProjection SetAuthority(WktAuthority authority)
-        {
             Authority = authority;
-            return this;
         }
 
 
+        /// <summary>
+        /// IEquatable.Equals implementation checking the whole tree.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(WktProjection other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -60,6 +47,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && Equals(Authority, other.Authority);
         }
 
+        /// <summary>
+        /// Basic override of Equals method.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -68,6 +60,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktProjection) obj);
         }
 
+        /// <summary>
+        /// Override of basic GetHashCode method.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

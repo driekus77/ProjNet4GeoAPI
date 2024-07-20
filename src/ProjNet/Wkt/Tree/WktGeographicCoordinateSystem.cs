@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProjNet.CoordinateSystems;
 
 namespace ProjNet.Wkt.Tree
@@ -12,7 +13,7 @@ namespace ProjNet.Wkt.Tree
         /// <summary>
         /// AngularUnit property.
         /// </summary>
-        public WktAngularUnit AngularUnit { get; set; }
+        public WktUnit AngularUnit { get; set; }
 
         /// <summary>
         /// Unit property.
@@ -60,110 +61,24 @@ namespace ProjNet.Wkt.Tree
         /// <summary>
         /// Constructor.
         /// </summary>
-        public WktGeographicCoordinateSystem(string name = null) : base(name)
+        public WktGeographicCoordinateSystem(string name, WktDatum datum, WktPrimeMeridian meridian, WktUnit angularUnit,
+                                                IEnumerable<WktAxis> axes, WktAuthority authority,
+                                                string keyword = "GEOGCS", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(name, keyword, leftDelimiter, rightDelimiter)
         {
-        }
-
-        /// <summary>
-        /// SetAngularUnit method.
-        /// </summary>
-        /// <param name="angularUnit"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetAngularUnit(WktAngularUnit angularUnit)
-        {
-            this.AngularUnit = angularUnit;
-            return this;
-        }
-
-        /// <summary>
-        /// SetUnit method.
-        /// </summary>
-        /// <param name="unit"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetUnit(WktUnit unit)
-        {
-            this.Unit = unit;
-            return this;
-        }
-
-        /// <summary>
-        /// SetHorizontalDatum method.
-        /// </summary>
-        /// <param name="datum"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetDatum(WktDatum datum)
-        {
-            this.HorizontalDatum = datum;
-            return this;
-        }
-
-        /// <summary>
-        /// SetPrimeMeridian method.
-        /// </summary>
-        /// <param name="primeMeridian"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetPrimeMeridian(WktPrimeMeridian primeMeridian)
-        {
-            this.PrimeMeridian = primeMeridian;
-            return this;
-        }
-
-        /// <summary>
-        /// SetAxisInfos method.
-        /// </summary>
-        /// <param name="axes"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetAxes(IEnumerable<WktAxis> axes)
-        {
-            this.Axes = axes;
-            return this;
-        }
-
-        /// <summary>
-        /// SetAuthority method.
-        /// </summary>
-        /// <param name="authority"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetAuthority(WktAuthority authority)
-        {
-            this.Authority = authority;
-            return this;
-        }
-
-        /// <summary>
-        /// SetAlias method.
-        /// </summary>
-        /// <param name="alias"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetAlias(string alias)
-        {
-            this.Alias = alias;
-            return this;
+            HorizontalDatum = datum;
+            PrimeMeridian = meridian;
+            AngularUnit = angularUnit;
+            Axes = axes;
+            Authority = authority;
         }
 
 
         /// <summary>
-        /// SetAbbreviation method.
+        /// Implementing IEquatable.Equals.
         /// </summary>
-        /// <param name="abbreviation"></param>
+        /// <param name="other"></param>
         /// <returns></returns>
-        public WktGeographicCoordinateSystem SetAbbreviation(string abbreviation)
-        {
-            Abbreviation = abbreviation;
-            return this;
-        }
-
-        /// <summary>
-        /// SetRemarks method.
-        /// </summary>
-        /// <param name="remarks"></param>
-        /// <returns></returns>
-        public WktGeographicCoordinateSystem SetRemarks(string remarks)
-        {
-            Remarks = remarks;
-            return this;
-        }
-
         public bool Equals(WktGeographicCoordinateSystem other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -172,11 +87,16 @@ namespace ProjNet.Wkt.Tree
                    Equals(Unit, other.Unit) &&
                    Equals(HorizontalDatum, other.HorizontalDatum) &&
                    Equals(PrimeMeridian, other.PrimeMeridian) &&
-                   Equals(Axes, other.Axes) &&
+                   Axes.SequenceEqual(other.Axes) &&
                    Equals(Authority, other.Authority) &&
                    Alias == other.Alias && Abbreviation == other.Abbreviation && Remarks == other.Remarks;
         }
 
+        /// <summary>
+        /// Overriding of basic Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -185,6 +105,10 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktGeographicCoordinateSystem) obj);
         }
 
+        /// <summary>
+        /// Overriding of basic GetHashCode.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked

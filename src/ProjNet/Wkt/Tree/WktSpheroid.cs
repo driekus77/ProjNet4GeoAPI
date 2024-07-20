@@ -28,56 +28,29 @@ namespace ProjNet.Wkt.Tree
         /// Constructor for a WktSpheroid.
         /// </summary>
         /// <param name="name"></param>
-        public WktSpheroid(string name = null)
-        {
-            Name = name;
-        }
-
-
-        /// <summary>
-        /// Setter method for Name.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public WktSpheroid SetName(string name)
-        {
-            Name = name;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for SemiMajorAxis.
-        /// </summary>
-        /// <param name="axis"></param>
-        /// <returns></returns>
-        public WktSpheroid SetSemiMajorAxis(double axis)
-        {
-            SemiMajorAxis = axis;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for InverseFlattening.
-        /// </summary>
-        /// <param name="flattening"></param>
-        /// <returns></returns>
-        public WktSpheroid SetInverseFlattening(double flattening)
-        {
-            InverseFlattening = flattening;
-            return this;
-        }
-
-        /// <summary>
-        /// Setter method for Authority.
-        /// </summary>
+        /// <param name="semiMajorAxis"></param>
+        /// <param name="inverseFlattening"></param>
         /// <param name="authority"></param>
-        /// <returns></returns>
-        public WktSpheroid SetAuthority(WktAuthority authority)
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
+        public WktSpheroid(string name, double semiMajorAxis, double inverseFlattening, WktAuthority authority,
+                            string keyword = "SPHEROID", char leftDelimiter = '[', char rightDelimiter = ']')
+            : base(keyword, leftDelimiter, rightDelimiter)
         {
+            Name = name;
+            SemiMajorAxis = semiMajorAxis;
+            InverseFlattening = inverseFlattening;
             Authority = authority;
-            return this;
         }
 
+
+
+        /// <summary>
+        /// IEquatable.Equals implementation checking the whole tree.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(WktSpheroid other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -85,6 +58,11 @@ namespace ProjNet.Wkt.Tree
             return Name == other.Name && SemiMajorAxis.Equals(other.SemiMajorAxis) && InverseFlattening.Equals(other.InverseFlattening) && Equals(Authority, other.Authority);
         }
 
+        /// <summary>
+        /// Override of basic Equals.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -93,11 +71,16 @@ namespace ProjNet.Wkt.Tree
             return Equals((WktSpheroid) obj);
         }
 
+        /// <summary>
+        /// Override of basic GetHashCode.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             unchecked
             {
-                int hashCode = (Name != null ? Name.GetHashCode() : 0);
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ SemiMajorAxis.GetHashCode();
                 hashCode = (hashCode * 397) ^ InverseFlattening.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Authority != null ? Authority.GetHashCode() : 0);
