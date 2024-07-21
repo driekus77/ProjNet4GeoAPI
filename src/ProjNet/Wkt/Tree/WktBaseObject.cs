@@ -45,5 +45,24 @@ namespace ProjNet.Wkt.Tree
         /// <inheritdoc/>
         public abstract void Traverse(IWktTraverseHandler handler);
 
+
+        /// <inheritdoc/>
+        public abstract string ToString(IWktOutputFormatter formatter);
+        /*
+        {
+            return Keyword;
+        }
+        */
+
+
+        /// <summary>
+        /// Override default ToString calling the formatter version with a DefaultWktOutputFormatter.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return this.ToString(new DefaultWktOutputFormatter());
+        }
+
     }
 }

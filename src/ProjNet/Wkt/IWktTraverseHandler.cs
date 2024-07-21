@@ -1,6 +1,7 @@
 using System.Collections.Generic;
+using ProjNet.Wkt.Tree;
 
-namespace ProjNet.Wkt.Tree
+namespace ProjNet.Wkt
 {
     /// <summary>
     /// IWktTraverseHandler interface for traveling a WktObject tree.

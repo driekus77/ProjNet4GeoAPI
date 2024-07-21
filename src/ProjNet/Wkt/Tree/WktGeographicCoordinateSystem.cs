@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ProjNet.CoordinateSystems;
 
 namespace ProjNet.Wkt.Tree
@@ -147,6 +148,75 @@ namespace ProjNet.Wkt.Tree
                 Authority.Traverse(handler);
 
             handler.Handle(this);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString(IWktOutputFormatter formatter)
+        {
+            formatter = formatter ?? new DefaultWktOutputFormatter();
+
+            var result = new StringBuilder();
+
+            formatter
+                .AppendKeyword(Keyword, result)
+                .AppendLeftDelimiter(LeftDelimiter, result)
+                .AppendQuotedText(Name, result);
+
+            if (HorizontalDatum != null)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(HorizontalDatum.ToString(formatter), result);
+            }
+
+            if (PrimeMeridian != null)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(PrimeMeridian.ToString(formatter), result);
+            }
+
+            if (AngularUnit != null)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(AngularUnit.ToString(formatter), result);
+            }
+
+            if (Unit != null)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(Unit.ToString(formatter), result);
+            }
+
+            if (Axes != null && Axes.Any())
+            {
+                foreach (var axis in Axes)
+                {
+                    formatter
+                        .AppendSeparator(result)
+                        .AppendExtraWhitespace(result)
+                        .Append(axis.ToString(formatter), result);
+                }
+            }
+
+            if (Authority != null)
+            {
+                formatter
+                    .AppendSeparator(result, keepInside: false)
+                    .AppendIndent(result)
+                    .Append(Authority.ToString(formatter), result);
+            }
+
+            formatter
+                .AppendRightDelimiter(RightDelimiter, result);
+
+            return result.ToString();
         }
     }
 }

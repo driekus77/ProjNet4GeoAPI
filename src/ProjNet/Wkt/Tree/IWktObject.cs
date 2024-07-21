@@ -18,5 +18,14 @@ namespace ProjNet.Wkt.Tree
         /// </summary>
         /// <param name="handler"></param>
         void Traverse(IWktTraverseHandler handler);
+
+
+        /// <summary>
+        /// Ouput this WktObject to string using the provided formatter.
+        /// If formatter is null the DefaultWktOutputFormatter is used.
+        /// </summary>
+        /// <param name="formatter"></param>
+        /// <returns></returns>
+        string ToString(IWktOutputFormatter formatter);
     }
 }

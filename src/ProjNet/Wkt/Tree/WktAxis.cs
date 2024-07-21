@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using ProjNet.CoordinateSystems;
 
 namespace ProjNet.Wkt.Tree
@@ -96,6 +97,25 @@ namespace ProjNet.Wkt.Tree
         public override void Traverse(IWktTraverseHandler handler)
         {
             handler.Handle(this);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString(IWktOutputFormatter formatter)
+        {
+            formatter = formatter ?? new DefaultWktOutputFormatter();
+
+            var result = new StringBuilder();
+
+            formatter
+                .AppendKeyword(Keyword, result)
+                .AppendLeftDelimiter(LeftDelimiter, result)
+                .AppendQuotedText(Name, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+                .Append(Direction.ToString(), result)
+                .AppendRightDelimiter(RightDelimiter, result);
+
+            return result.ToString();
         }
     }
 }

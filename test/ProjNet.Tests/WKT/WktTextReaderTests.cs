@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using NUnit.Framework;
 using NUnit.Framework.Internal.Commands;
 using Pidgin;
@@ -12,9 +13,6 @@ namespace ProjNET.Tests.WKT;
 
 public class WktTextReaderTests
 {
-    private static WktParser parser = new WktParser();
-
-
     [Test]
     public void TestAxisParser()
     {
@@ -308,7 +306,9 @@ public class WktTextReaderTests
                              "  AUTHORITY[\"ESRI\",\"4305\"]]";
 
         // Act
-        var result = parser.SpatialReferenceSystemParser.ParseOrThrow(parseText01);
+        using var sr = new StringReader(parseText01);
+        using var reader = new WktTextReader(sr);
+        var result = reader.ReadToEnd();
 
         // Assert
         Assert.NotNull(result);
@@ -320,18 +320,48 @@ public class WktTextReaderTests
         int parseCount = 0;
         foreach (var wkt in SRIDReader.GetSrids())
         {
-            var result01 = parser.SpatialReferenceSystemParser.Parse(wkt.Wkt);
+            // Parse in from CSV...
+            using var sr = new StringReader(wkt.Wkt);
+            using var reader = new WktTextReader(sr);
+            var result01 = reader.ReadToEnd();
             Assert.That(result01.Success, Is.True);
+
             var cs01 = result01.Value;
             Assert.IsNotNull(cs01, "Could not parse WKT: " + wkt.Wkt);
 
-            //@TODO: Create outputWriter and formater for changing delimiters in right context: .Replace("[", "(").Replace("]", ")")));
-            var result02 = parser.SpatialReferenceSystemParser.Parse(wkt.Wkt);
-            Assert.That(result02.Success, Is.True);
-            var cs02 = result02.Value;
+            // Generate WKT string from WktObject...
+            var formatter = new DefaultWktOutputFormatter(
+                newline: Environment.NewLine,
+                leftDelimiter: '(', rightDelimiter: ')',
+                indent: "\t", extraWhitespace: " ");
+            string wkt01 = cs01.ToString(formatter);
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(wkt01));
+
+            // Reparse the formatted WKT for extra testing...
+            using var sr02 = new StringReader(wkt01);
+            using var reader02 = new WktTextReader(sr02);
+            var result02 = reader02.ReadToEnd();
+
+            WktCoordinateSystem cs02 = null;
+            if (!result02.Success)
+            {
+                Console.WriteLine($"Original: {wkt.Wkt}");
+                Console.WriteLine($"Parsed 1: {wkt01}");
+                Assert.Fail(result02.Error.RenderErrorMessage());
+            }
+
+            cs02 = result02.GetValueOrDefault();
 
             // Comparing whole tree using IEquatable.Equals(...)
-            Assert.That(cs01.Equals(cs02), Is.True);
+            if (!cs01.Equals(cs02))
+            {
+                Console.Error.WriteLine($"Original: {wkt.Wkt}");
+                Console.Error.WriteLine($"Parsed 1: {wkt01}");
+                Console.Error.WriteLine($"Parsed 2: {cs02}");
+                Assert.Fail("Error comparing cs01 and cs02. See beneath...");
+            }
+
             parseCount++;
         }
         Assert.That(parseCount, Is.GreaterThan(2671), "Not all WKT was parsed");

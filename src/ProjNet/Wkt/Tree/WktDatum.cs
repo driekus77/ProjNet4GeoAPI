@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace ProjNet.Wkt.Tree
 {
@@ -96,5 +97,43 @@ namespace ProjNet.Wkt.Tree
 
             handler.Handle(this);
         }
+
+        /// <inheritdoc/>
+        public override string ToString(IWktOutputFormatter formatter)
+        {
+            formatter = formatter ?? new DefaultWktOutputFormatter();
+
+            var result = new StringBuilder();
+
+            formatter
+                .AppendKeyword(Keyword, result)
+                .AppendLeftDelimiter(LeftDelimiter, result)
+                .AppendQuotedText(Name, result)
+                .AppendSeparator(result)
+                .AppendExtraWhitespace(result)
+                .Append(Spheroid.ToString(formatter), result);
+
+            if (ToWgs84 != null)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(ToWgs84.ToString(formatter), result);
+            }
+
+            if (Authority != null)
+            {
+                formatter
+                    .AppendSeparator(result, keepInside: false)
+                    .AppendIndent(result)
+                    .Append(Authority.ToString(formatter), result);
+            }
+
+            formatter
+                .AppendRightDelimiter(RightDelimiter, result);
+
+            return result.ToString();
+        }
+
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace ProjNet.Wkt.Tree
 {
@@ -155,6 +156,71 @@ namespace ProjNet.Wkt.Tree
                 Extension.Traverse(handler);
 
             handler.Handle(this);
+        }
+
+
+        /// <inheritdoc/>
+        public override string ToString(IWktOutputFormatter formatter)
+        {
+            formatter = formatter ?? new DefaultWktOutputFormatter();
+
+            var result = new StringBuilder();
+
+            formatter
+                .AppendKeyword(Keyword, result)
+                .AppendLeftDelimiter(LeftDelimiter, result)
+                .AppendQuotedText(Name, result)
+
+                .AppendSeparator(result)
+
+                .AppendExtraWhitespace(result)
+                .Append(GeographicCoordinateSystem.ToString(formatter), result)
+
+                .AppendSeparator(result)
+                .AppendExtraWhitespace(result)
+                .Append(Projection.ToString(formatter), result);
+
+            foreach (var p in Parameters)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(p.ToString(formatter), result);
+            }
+
+            formatter
+                .AppendSeparator(result)
+                .AppendExtraWhitespace(result)
+                .Append(Unit.ToString(formatter), result);
+
+            foreach (var ax in Axes)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(ax.ToString(formatter), result);
+            }
+
+            if (Extension != null)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendExtraWhitespace(result)
+                    .Append(Extension.ToString(formatter), result);
+            }
+
+            if (Authority != null)
+            {
+                formatter
+                    .AppendSeparator(result)
+                    .AppendIndent(result)
+                    .Append(Authority.ToString(formatter), result);
+            }
+
+            formatter
+                .AppendRightDelimiter(RightDelimiter, result);
+
+            return result.ToString();
         }
     }
 }

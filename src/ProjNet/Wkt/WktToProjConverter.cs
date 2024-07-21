@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProjNet.CoordinateSystems;
+using ProjNet.Wkt.Tree;
 
-namespace ProjNet.Wkt.Tree
+namespace ProjNet.Wkt
 {
     /// <summary>
     /// WktToProjConverter - Visitor for converting Wkt to Proj objects.
@@ -170,6 +171,9 @@ namespace ProjNet.Wkt.Tree
         /// <returns></returns>
         public CoordinateSystem Convert(IWktObject wktObject)
         {
+            // Make sure the table is empty before starting...
+            table.Clear();
+
             // Travel the tree and make sure above Handle methods are called.
             wktObject.Traverse(this);
 

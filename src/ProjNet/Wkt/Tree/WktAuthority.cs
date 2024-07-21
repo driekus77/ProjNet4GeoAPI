@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace ProjNet.Wkt.Tree
 {
@@ -92,5 +94,25 @@ namespace ProjNet.Wkt.Tree
         {
             handler.Handle(this);
         }
+
+        /// <inheritdoc/>
+        public override string ToString(IWktOutputFormatter formatter)
+        {
+            formatter = formatter ?? new DefaultWktOutputFormatter();
+
+            var result = new StringBuilder();
+
+            formatter
+                .AppendKeyword(Keyword, result, false)
+                .AppendLeftDelimiter(LeftDelimiter, result)
+                .AppendQuotedText(Name, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+                .AppendQuotedText(Code.ToString(CultureInfo.InvariantCulture), result)
+                .AppendRightDelimiter(RightDelimiter, result);
+
+            return result.ToString();
+        }
+
     }
 }

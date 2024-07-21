@@ -40,5 +40,21 @@ namespace ProjNet.Wkt.Tree
             else if (this is WktGeocentricCoordinateSystem geoccs)
                 geoccs.Traverse(handler);
         }
+
+
+        /// <inheritdoc/>
+        public override string ToString(IWktOutputFormatter formatter)
+        {
+            formatter = formatter ?? new DefaultWktOutputFormatter();
+
+            if (this is WktProjectedCoordinateSystem projcs)
+                return projcs.ToString(formatter);
+            else if (this is WktGeographicCoordinateSystem geogcs)
+                return geogcs.ToString(formatter);
+            else if (this is WktGeocentricCoordinateSystem geoccs)
+                return geoccs.ToString(formatter);
+
+            return Keyword;
+        }
     }
 }

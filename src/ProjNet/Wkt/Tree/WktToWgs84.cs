@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace ProjNet.Wkt.Tree
 {
@@ -119,6 +120,53 @@ namespace ProjNet.Wkt.Tree
         public override void Traverse(IWktTraverseHandler handler)
         {
             handler.Handle(this);
+        }
+
+
+        /// <inheritdoc/>
+        public override string ToString(IWktOutputFormatter formatter)
+        {
+            formatter = formatter ?? new DefaultWktOutputFormatter();
+
+            var result = new StringBuilder();
+
+            formatter
+                .AppendKeyword(Keyword, result)
+                .AppendLeftDelimiter(LeftDelimiter, result)
+                .Append(DxShift, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+                .Append(DyShift, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+                .Append(DzShift, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+
+                .Append(ExRotation, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+                .Append(EyRotation, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+                .Append(EzRotation, result)
+                .AppendSeparator(result, keepInside: true)
+                .AppendExtraWhitespace(result)
+
+                .Append(PpmScaling, result);
+
+            if (!string.IsNullOrWhiteSpace(Description))
+            {
+                formatter
+                    .AppendSeparator(result, keepInside: true)
+                    .AppendExtraWhitespace(result)
+                    .AppendQuotedText(Description, result);
+            }
+
+            formatter
+                .AppendRightDelimiter(RightDelimiter, result);
+
+            return result.ToString();
         }
     }
 }
