@@ -48,9 +48,19 @@ namespace ProjNet.Wkt.Tree
 
 
         /// <summary>
-        /// Constructor optionally setting the Description.
+        /// Constructor for WktToWgs84 class.
         /// </summary>
+        /// <param name="dxShift"></param>
+        /// <param name="dyShift"></param>
+        /// <param name="dzShift"></param>
+        /// <param name="exRotation"></param>
+        /// <param name="eyRotation"></param>
+        /// <param name="ezRotation"></param>
+        /// <param name="ppmScaling"></param>
         /// <param name="description"></param>
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
         public WktToWgs84(double dxShift, double dyShift, double dzShift,
                             double exRotation, double eyRotation, double ezRotation,
                             double ppmScaling, string description = default,

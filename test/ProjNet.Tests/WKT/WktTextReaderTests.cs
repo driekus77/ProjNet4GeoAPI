@@ -650,6 +650,21 @@ public class WktTextReaderTests
         // Assert
         Assert.NotNull(resultCs);
         Assert.IsTrue(resultCs.Success);
+
+
+        // Convert to Proj
+        var converter = new WktToProjConverter(fac);
+        var projCs = converter.Convert(resultCs.Value) as GeocentricCoordinateSystem;
+
+        Assert.NotNull(projCs);
+        Assert.AreEqual("TUREF", projCs.Name);
+        Assert.AreEqual("EPSG", projCs.Authority);
+        Assert.AreEqual(5250, projCs.AuthorityCode);
+
+        Assert.AreEqual("Turkish_National_Reference_Frame", projCs.HorizontalDatum.Name);
+        Assert.AreEqual("EPSG", projCs.HorizontalDatum.Authority);
+        Assert.AreEqual(1057, projCs.HorizontalDatum.AuthorityCode);
+
     }
 
 
@@ -685,5 +700,50 @@ public class WktTextReaderTests
         Assert.NotNull(resultCs);
         Assert.IsTrue(resultCs.Success);
     }
+
+    [Test]
+    public void TestAxisPresent()
+    {
+        string parseText = "PROJCS[\"CH1903+ / LV95\",\n" +
+                           "    GEOGCS[\"CH1903+\",\n" +
+                           "        DATUM[\"CH1903+\",\n" +
+                           "            SPHEROID[\"Bessel 1841\",6377397.155,299.1528128,AUTHORITY[\"EPSG\",\"7004\"]],\n" +
+                           "            TOWGS84[674.374,15.056,405.346,0,0,0,0],AUTHORITY[\"EPSG\",\"6150\"]],\n" +
+                           "            PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],\n" +
+                           "            UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],\n" +
+                           "            AUTHORITY[\"EPSG\",\"4150\"]],\n" +
+                           "        PROJECTION[\"Hotine_Oblique_Mercator_Azimuth_Center\"],\n" +
+                           "        PARAMETER[\"latitude_of_center\",46.95240555555556],\n" +
+                           "        PARAMETER[\"longitude_of_center\",7.439583333333333],\n" +
+                           "        PARAMETER[\"azimuth\",90],\n" +
+                           "        PARAMETER[\"rectified_grid_angle\",90],\n" +
+                           "        PARAMETER[\"scale_factor\",1],\n" +
+                           "        PARAMETER[\"false_easting\",2600000],\n" +
+                           "        PARAMETER[\"false_northing\",1200000],\n" +
+                           "        UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],\n" +
+                           "        AXIS[\"Easting\",EAST],\n" +
+                           "        AXIS[\"Northing\",NORTH],\n" +
+                           "    AUTHORITY[\"EPSG\",\"2056\"]]";
+
+        using var sr = new StringReader(parseText);
+        using var reader = new WktTextReader(sr);
+
+        // Act
+        var resultCs = reader.ReadToEnd();
+
+        // Assert
+        Assert.NotNull(resultCs);
+        Assert.IsTrue(resultCs.Success);
+
+        var projCs = resultCs.Value as WktProjectedCoordinateSystem;
+        Assert.AreEqual(2, projCs.Axes.Count());
+        var axis01 = projCs.Axes.ElementAt(0);
+        var axis02 = projCs.Axes.ElementAt(1);
+        Assert.AreEqual("Easting", axis01.Name);
+        Assert.AreEqual(AxisOrientationEnum.East, axis01.Direction);
+        Assert.AreEqual("Northing", axis02.Name);
+        Assert.AreEqual(AxisOrientationEnum.North, axis02.Direction);
+    }
+
 
 }

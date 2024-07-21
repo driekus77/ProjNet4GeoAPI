@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Pidgin;
 using ProjNet.CoordinateSystems;
+using ProjNet.CoordinateSystems.Transformations;
 using ProjNet.Wkt.Tree;
+using Unit = ProjNet.CoordinateSystems.Unit;
 
 namespace ProjNet.Wkt
 {
@@ -41,7 +44,6 @@ namespace ProjNet.Wkt
         private List<WktToProjRecord> table = new List<WktToProjRecord>();
 
         private CoordinateSystemFactory factory;
-        private CoordinateSystem coordinateSystem;
 
 
         /// <summary>
@@ -124,22 +126,32 @@ namespace ProjNet.Wkt
             table.Add(new WktToProjRecord(unit, u));
         }
 
+        /// <inheritdoc/>
         public void Handle(WktParameter parameter)
         {
             var p = new ProjectionParameter(parameter.Name, parameter.Value);
             table.Add(new WktToProjRecord(parameter, p));
         }
 
+        /// <inheritdoc/>
+        public void Handle(WktParameterMathTransform pmt)
+        {
+            table.Add(new WktToProjRecord(pmt, null));
+        }
+
+        /// <inheritdoc/>
         public void Handle(WktPrimeMeridian meridian)
         {
             table.Add(new WktToProjRecord(meridian, null));
         }
 
+        /// <inheritdoc/>
         public void Handle(WktProjection projection)
         {
             table.Add(new WktToProjRecord(projection, null));
         }
 
+        /// <inheritdoc/>
         public void Handle(WktToWgs84 toWgs84)
         {
             var wgs84 = new Wgs84ConversionInfo(toWgs84.DxShift, toWgs84.DyShift, toWgs84.DzShift, toWgs84.ExRotation,
@@ -148,17 +160,26 @@ namespace ProjNet.Wkt
             table.Add(new WktToProjRecord(toWgs84, wgs84));
         }
 
+        /// <inheritdoc/>
         public void Handle(WktGeocentricCoordinateSystem cs)
         {
             table.Add(new WktToProjRecord(cs, null));
         }
 
+        /// <inheritdoc/>
         public void Handle(WktGeographicCoordinateSystem cs)
         {
             table.Add(new WktToProjRecord(cs, null));
         }
 
+        /// <inheritdoc/>
         public void Handle(WktProjectedCoordinateSystem cs)
+        {
+            table.Add(new WktToProjRecord(cs, null));
+        }
+
+        /// <inheritdoc/>
+        public void Handle(WktFittedCoordinateSystem cs)
         {
             table.Add(new WktToProjRecord(cs, null));
         }
@@ -202,6 +223,10 @@ namespace ProjNet.Wkt
                 return Create(geogcs);
             else if (wkt is WktGeocentricCoordinateSystem geoccs)
                 return Create(geoccs);
+            else if (wkt is WktFittedCoordinateSystem fitcs)
+                return Create(fitcs);
+            else if (wkt is WktParameterMathTransform pmt)
+                return Create(pmt);
             else if (wkt is WktProjection prj)
                 return Create(prj);
             else if (wkt is WktDatum d)
@@ -228,14 +253,12 @@ namespace ProjNet.Wkt
             }
 
             var ax1 = (AxisInfo) FindOrCreateProjObject(projcs.Axes.ElementAtOrDefault(0));
-            var ax2 = (AxisInfo) FindOrCreateProjObject(projcs.Axes.ElementAtOrDefault(1));
+            ax1 = ax1 ?? new AxisInfo("X", AxisOrientationEnum.East);
 
-            var result = this.factory.CreateProjectedCoordinateSystem(projcs.Name, gcs, p, lu, ax1, ax2);
-            if (projcs.Authority != null)
-            {
-                result.Authority = projcs.Authority.Name;
-                result.AuthorityCode = projcs.Authority.Code;
-            }
+            var ax2 = (AxisInfo) FindOrCreateProjObject(projcs.Axes.ElementAtOrDefault(1));
+            ax2 = ax2 ?? new AxisInfo("Y", AxisOrientationEnum.North);
+
+            var result = new ProjectedCoordinateSystem(gcs.HorizontalDatum, gcs, lu, p, new List<AxisInfo>{ax1, ax2}, projcs.Name, projcs.Authority?.Name, projcs.Authority!=null ? projcs.Authority.Code : -1, string.Empty, string.Empty, string.Empty);
 
             return FillItem(projcs, result);
         }
@@ -252,13 +275,36 @@ namespace ProjNet.Wkt
 
             var d = (HorizontalDatum) FindOrCreateProjObject(geogcs.HorizontalDatum);
             var pm = (PrimeMeridian) FindOrCreateProjObject(geogcs.PrimeMeridian);
+
+            //This is default axis values if not specified.
             var ax1 = (AxisInfo) FindOrCreateProjObject(geogcs.Axes.ElementAtOrDefault(0));
+            ax1 = ax1 ?? new AxisInfo("Lon", AxisOrientationEnum.East);
             var ax2 = (AxisInfo) FindOrCreateProjObject(geogcs.Axes.ElementAtOrDefault(1));
+            ax2 = ax2 ?? new AxisInfo("Lat", AxisOrientationEnum.North);
+
 
             var result = this.factory.CreateGeographicCoordinateSystem(geogcs.Name, angularUnit:au, datum: d,
                 primeMeridian: pm, axis0: ax1, axis1:ax2);
 
+            if (geogcs.Authority != null)
+            {
+                result.Authority = geogcs.Authority.Name;
+                result.AuthorityCode = geogcs.Authority.Code;
+            }
+
             return FillItem(geogcs, result);
+        }
+
+
+        private object Create(WktFittedCoordinateSystem fitcs)
+        {
+            var baseCS = (ProjectedCoordinateSystem) FindOrCreateProjObject(fitcs.ProjectedCoordinateSystem);
+
+            var toBaseTransform = (MathTransform) FindOrCreateProjObject(fitcs.ParameterMathTransform);
+
+            var result = new FittedCoordinateSystem (baseCS, toBaseTransform, fitcs.Name, fitcs.Authority?.Name, fitcs.Authority!=null?fitcs.Authority.Code: -1, string.Empty, string.Empty, string.Empty);
+
+            return FillItem(fitcs, result);
         }
 
         private object Create(WktGeocentricCoordinateSystem geoccs)
@@ -276,6 +322,12 @@ namespace ProjNet.Wkt
 
             var result =
                 this.factory.CreateGeocentricCoordinateSystem(geoccs.Name, datum: d, linearUnit: lu, primeMeridian: pm);
+
+            if (geoccs.Authority != null)
+            {
+                result.Authority = geoccs.Authority.Name;
+                result.AuthorityCode = geoccs.Authority.Code;
+            }
 
             return FillItem(geoccs, result);
         }
@@ -323,15 +375,19 @@ namespace ProjNet.Wkt
 
             var result = this.factory.CreateHorizontalDatum(wkt.Name, DatumType.HD_Geocentric, ellipsoid:e, toWgs84: wgs84);
 
+            if (wkt.Authority != null)
+            {
+                result.Authority = wkt.Authority.Name;
+                result.AuthorityCode = wkt.Authority.Code;
+            }
+
             return FillItem(wkt, result);
         }
 
 
         private object Create(WktEllipsoid wkt)
         {
-            var lu = (LinearUnit) null;
-
-            var result = this.factory.CreateEllipsoid(wkt.Name, wkt.SemiMajorAxis, wkt.InverseFlattening, linearUnit: lu);
+            var result = new Ellipsoid(wkt.SemiMajorAxis, 0.0, wkt.InverseFlattening, true, LinearUnit.Metre, wkt.Name, wkt.Authority?.Name, wkt.Authority!=null ? wkt.Authority.Code : -1, string.Empty, string.Empty, string.Empty);
 
             return FillItem(wkt, result);
         }
@@ -339,9 +395,15 @@ namespace ProjNet.Wkt
 
         private object Create(WktPrimeMeridian wkt)
         {
-            var au = (AngularUnit) null;
+            var au = (AngularUnit) AngularUnit.Degrees;
 
             var result = this.factory.CreatePrimeMeridian(wkt.Name, angularUnit: au, longitude: wkt.Longitude);
+
+            if (wkt.Authority != null)
+            {
+                result.Authority = wkt.Authority.Name;
+                result.AuthorityCode = wkt.Authority.Code;
+            }
 
             return FillItem(wkt, result);
         }
@@ -353,5 +415,129 @@ namespace ProjNet.Wkt
             table[idx].ProjObject = proj;
             return proj;
         }
+
+        private object Create(WktParameterMathTransform input)
+        {
+            if (input.Name.Equals("Affine", StringComparison.InvariantCultureIgnoreCase))
+            {
+                /*
+                     PARAM_MT[
+                        "Affine",
+                        PARAMETER["num_row",3],
+                        PARAMETER["num_col",3],
+                        PARAMETER["elt_0_0", 0.883485346527455],
+                        PARAMETER["elt_0_1", -0.468458794848877],
+                        PARAMETER["elt_0_2", 3455869.17937689],
+                        PARAMETER["elt_1_0", 0.468458794848877],
+                        PARAMETER["elt_1_1", 0.883485346527455],
+                        PARAMETER["elt_1_2", 5478710.88035753],
+                        PARAMETER["elt_2_2", 1]
+                     ]
+                */
+                //tokenizer stands on the first PARAMETER
+                var paramInfo = input;
+                //manage required parameters - row, col
+                var rowParam = paramInfo.Parameters.FirstOrDefault(x => x.Name == "num_row");
+                var colParam = paramInfo.Parameters.FirstOrDefault(x => x.Name == "num_col");
+
+                if (rowParam == null)
+                {
+                    throw new ArgumentNullException(nameof(rowParam),
+                        "Affine transform does not contain 'num_row' parameter");
+                }
+
+                if (colParam == null)
+                {
+                    throw new ArgumentNullException(nameof(colParam),
+                        "Affine transform does not contain 'num_col' parameter");
+                }
+
+                int rowVal = (int) rowParam.Value;
+                int colVal = (int) colParam.Value;
+
+                if (rowVal <= 0)
+                {
+                    throw new ArgumentException("Affine transform contains invalid value of 'num_row' parameter");
+                }
+
+                if (colVal <= 0)
+                {
+                    throw new ArgumentException("Affine transform contains invalid value of 'num_col' parameter");
+                }
+
+                //creates working matrix;
+                double[,] matrix = new double[rowVal, colVal];
+
+                //simply process matrix values - no elt_ROW_COL parsing
+                foreach (var param in paramInfo.Parameters)
+                {
+                    if (param == null || param.Name == null)
+                    {
+                        continue;
+                    }
+
+                    switch (param.Name)
+                    {
+                        case "num_row":
+                        case "num_col":
+                            break;
+                        case "elt_0_0":
+                            matrix[0, 0] = param.Value;
+                            break;
+                        case "elt_0_1":
+                            matrix[0, 1] = param.Value;
+                            break;
+                        case "elt_0_2":
+                            matrix[0, 2] = param.Value;
+                            break;
+                        case "elt_0_3":
+                            matrix[0, 3] = param.Value;
+                            break;
+                        case "elt_1_0":
+                            matrix[1, 0] = param.Value;
+                            break;
+                        case "elt_1_1":
+                            matrix[1, 1] = param.Value;
+                            break;
+                        case "elt_1_2":
+                            matrix[1, 2] = param.Value;
+                            break;
+                        case "elt_1_3":
+                            matrix[1, 3] = param.Value;
+                            break;
+                        case "elt_2_0":
+                            matrix[2, 0] = param.Value;
+                            break;
+                        case "elt_2_1":
+                            matrix[2, 1] = param.Value;
+                            break;
+                        case "elt_2_2":
+                            matrix[2, 2] = param.Value;
+                            break;
+                        case "elt_2_3":
+                            matrix[2, 3] = param.Value;
+                            break;
+                        case "elt_3_0":
+                            matrix[3, 0] = param.Value;
+                            break;
+                        case "elt_3_1":
+                            matrix[3, 1] = param.Value;
+                            break;
+                        case "elt_3_2":
+                            matrix[3, 2] = param.Value;
+                            break;
+                        case "elt_3_3":
+                            matrix[3, 3] = param.Value;
+                            break;
+                    }
+                }
+
+                //use "matrix" constructor to create transformation matrix
+                return new AffineTransform(matrix);
+            }
+
+            return null;
+        }
+
     }
 }

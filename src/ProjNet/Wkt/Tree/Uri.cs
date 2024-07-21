@@ -12,6 +12,10 @@ namespace ProjNet.Wkt.v1.tree
         /// </summary>
         public string Ref { get; set; }
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="uriRef"></param>
         public Uri(string uriRef)
         {
             Ref = uriRef;

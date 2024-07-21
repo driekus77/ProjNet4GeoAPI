@@ -24,6 +24,7 @@ namespace ProjNet.Wkt.Tree
         /// Constructor for WKT Projection element.
         /// </summary>
         /// <param name="name"></param>
+        /// <param name="authority"></param>
         /// <param name="keyword"></param>
         /// <param name="leftDelimiter"></param>
         /// <param name="rightDelimiter"></param>

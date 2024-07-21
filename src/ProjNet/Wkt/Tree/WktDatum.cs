@@ -30,9 +30,15 @@ namespace ProjNet.Wkt.Tree
 
 
         /// <summary>
-        /// Constructor for WKT Datum.
+        /// Constructor for WktDatum.
         /// </summary>
         /// <param name="name"></param>
+        /// <param name="spheroid"></param>
+        /// <param name="toWgs84"></param>
+        /// <param name="authority"></param>
+        /// <param name="keyword"></param>
+        /// <param name="leftDelimiter"></param>
+        /// <param name="rightDelimiter"></param>
         public WktDatum(string name, WktSpheroid spheroid, WktToWgs84 toWgs84, WktAuthority authority,
                         string keyword = "DATUM", char leftDelimiter = '[', char rightDelimiter = ']')
             : base(keyword, leftDelimiter, rightDelimiter)

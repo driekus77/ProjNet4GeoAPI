@@ -48,6 +48,10 @@ namespace ProjNet.Wkt.v1.tree
             Remark = remark;
         }
 
+        /// <summary>
+        /// ToWKT.
+        /// </summary>
+        /// <returns></returns>
         public string ToWKT()
         {
             var sb = new StringBuilder();

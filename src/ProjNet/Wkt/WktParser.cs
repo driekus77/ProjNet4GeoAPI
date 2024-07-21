@@ -1,5 +1,8 @@
 using System;
+using System.Globalization;
+using System.Linq;
 using Pidgin;
+using ProjNet.CoordinateSystems;
 using ProjNet.Wkt.Tree;
 using static Pidgin.Parser;
 
@@ -171,12 +174,13 @@ namespace ProjNet.Wkt
             .Or(ApproximateNumericLiteralParser);
 
         // <signed numeric literal> ::= {<sign>}<unsigned numeric literal>
-        internal static readonly Parser<char, double> SignedNumericLiteralParser = SignParser.Optional()
+        internal static readonly Parser<char, double> SignedNumericLiteralParser = BetweenWhitespace(
+            SignParser.Optional()
             .Then(UnsignedNumericLiteralParser, (sign, d) =>
             {
                 int signFactor = sign.GetValueOrDefault() == '-' ? -1 : 1;
                 return signFactor * d;
-            } );
+            } ));
 
         // <x> ::= <signed numeric literal>
         internal static readonly Parser<char, double> XParser = SignedNumericLiteralParser;
@@ -507,9 +511,13 @@ namespace ProjNet.Wkt
 
         internal readonly Parser<char, WktDatum> DatumParser;
 
+        internal readonly Parser<char, WktParameterMathTransform> ParameterMathTransformParser;
+        internal readonly Parser<char, WktFittedCoordinateSystem> FittedCsParser;
+
         internal readonly Parser<char, WktGeographicCoordinateSystem> GeographicCsParser;
         internal readonly Parser<char, WktGeocentricCoordinateSystem> GeocentricCsParser;
         internal readonly Parser<char, WktProjectedCoordinateSystem> ProjectedCsParser;
+
         internal readonly Parser<char, WktCoordinateSystem> SpatialReferenceSystemParser;
 
 
@@ -524,7 +532,7 @@ namespace ProjNet.Wkt
                     String("AUTHORITY"),
                     LeftDelimiterParser,
                     QuotedNameParser,
-                    WktSeparatorParser.Then(QuotedNameParser),
+                    WktSeparatorParser.Then(Try(QuotedNameParser).Or(DigitParser.Many().Select(digits => new string(digits.ToArray())))),
                     RightDelimiterParser)
                 .Labelled("WktAuthority");
 
@@ -635,10 +643,8 @@ namespace ProjNet.Wkt
                             {
                                 case "degree":
                                     return new WktAngularUnit(name, factor, authority.GetValueOrDefault(), kw, ld, rd);
-                                   break;
                                 case "metre":
                                     return new WktLinearUnit(name, factor, authority.GetValueOrDefault(), kw, ld, rd);
-                                    break;
                                 default:
                                     return new WktUnit(name, factor, authority.GetValueOrDefault(), kw, ld, rd);
                             }
@@ -728,11 +734,36 @@ namespace ProjNet.Wkt
                     RightDelimiterParser)
                 .Labelled("WktProjectedCoordinateSystem");
 
+
+           // Fitted CoordinateSystem parser(s)
+           ParameterMathTransformParser =
+               Map((kw, ld, name, parameters, rd) => new WktParameterMathTransform(name, parameters, kw, ld, rd),
+                       String("PARAM_MT"),
+                       LeftDelimiterParser,
+                       ParameterNameParser,
+                       WktSeparatorParser.Then(ParameterParser).Many(),
+                       RightDelimiterParser)
+                   .Labelled("WktParameterMathTransform");
+
+           FittedCsParser =
+               Map((kw, ld,name,pmt, projcs, authority, rd) =>
+                           new WktFittedCoordinateSystem(name, pmt, projcs, authority.GetValueOrDefault(), kw, ld, rd),
+                       String("FITTED_CS"),
+                       LeftDelimiterParser,
+                       CsNameParser,
+                       WktSeparatorParser.Then(ParameterMathTransformParser),
+                       WktSeparatorParser.Then(ProjectedCsParser),
+                       WktSeparatorParser.Then(AuthorityParser).Optional(),
+                       RightDelimiterParser)
+                   .Labelled("WktFittedCoordinateSystem");
+
+
             // <spatial reference system> ::= <projected cs> | <geographic cs> | <geocentric cs>
-            SpatialReferenceSystemParser =
-                Try(ProjectedCsParser.Cast<WktCoordinateSystem>()).Or(
-                Try(GeographicCsParser.Cast<WktCoordinateSystem>()).Or(
-                Try(GeocentricCsParser.Cast<WktCoordinateSystem>()))
+            SpatialReferenceSystemParser = OneOf(
+                Try(ProjectedCsParser.Cast<WktCoordinateSystem>()),
+                Try(GeographicCsParser.Cast<WktCoordinateSystem>()),
+                Try(GeocentricCsParser.Cast<WktCoordinateSystem>()),
+                Try(FittedCsParser.Cast<WktCoordinateSystem>())
             ).Labelled("WktCoordinateSystem");
         }
     }

@@ -50,6 +50,10 @@ namespace ProjNet.Wkt.v1.tree
         public Uri IdUri { get; set; }
 
 
+        /// <summary>
+        /// ToWKT.
+        /// </summary>
+        /// <returns></returns>
         public string ToWKT()
         {
             var sb = new StringBuilder();

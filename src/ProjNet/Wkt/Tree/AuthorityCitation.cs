@@ -33,6 +33,10 @@ namespace ProjNet.Wkt.v1.tree
             return sb.ToString();
         }
 
+        /// <summary>
+        /// ToString basic override.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return Citation;

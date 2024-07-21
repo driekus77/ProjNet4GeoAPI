@@ -5,6 +5,10 @@ namespace ProjNet.Wkt.v1.tree
     /// </summary>
     public interface IWktAttribute
     {
+        /// <summary>
+        /// ToWKT.
+        /// </summary>
+        /// <returns></returns>
         string ToWKT();
     }
 }
