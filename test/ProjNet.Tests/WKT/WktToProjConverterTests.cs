@@ -1,8 +1,9 @@
 using System.IO;
 using NUnit.Framework;
 using ProjNet.CoordinateSystems;
+using ProjNet.IO.Wkt.Core;
+using ProjNet.IO.Wkt.Tree;
 using ProjNet.Wkt;
-using ProjNet.Wkt.Tree;
 
 namespace ProjNET.Tests.WKT;
 

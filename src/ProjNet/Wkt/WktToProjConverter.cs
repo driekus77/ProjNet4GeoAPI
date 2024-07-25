@@ -4,7 +4,8 @@ using System.Linq;
 using Pidgin;
 using ProjNet.CoordinateSystems;
 using ProjNet.CoordinateSystems.Transformations;
-using ProjNet.Wkt.Tree;
+using ProjNet.IO.Wkt.Core;
+using ProjNet.IO.Wkt.Tree;
 using Unit = ProjNet.CoordinateSystems.Unit;
 
 namespace ProjNet.Wkt
@@ -41,7 +42,7 @@ namespace ProjNet.Wkt
             }
         }
 
-        private List<WktToProjRecord> table = new List<WktToProjRecord>();
+        private Dictionary<IWktObject, object> table = new Dictionary<IWktObject, object>();
 
         private CoordinateSystemFactory factory;
 
@@ -62,7 +63,8 @@ namespace ProjNet.Wkt
         /// <param name="authority"></param>
         public void Handle(WktAuthority authority)
         {
-            table.Add(new WktToProjRecord(authority, null));
+            //table.Add(new WktToProjRecord(authority, null));
+            table[authority] = null;
         }
 
         /// <summary>
@@ -71,8 +73,9 @@ namespace ProjNet.Wkt
         /// <param name="axis"></param>
         public void Handle(WktAxis axis)
         {
-            var a = new AxisInfo(axis.Name, axis.Direction);
-            table.Add(new WktToProjRecord(axis, a));
+            var a = new AxisInfo(axis.Name, Map(axis.Direction));
+            //table.Add(new WktToProjRecord(axis, a));
+            table[axis] = a;
         }
 
         /// <summary>
@@ -81,7 +84,8 @@ namespace ProjNet.Wkt
         /// <param name="datum"></param>
         public void Handle(WktDatum datum)
         {
-            table.Add(new WktToProjRecord(datum, null));
+            //table.Add(new WktToProjRecord(datum, null));
+            table[datum] = null;
         }
 
         /// <summary>
@@ -90,7 +94,8 @@ namespace ProjNet.Wkt
         /// <param name="ellipsoid"></param>
         public void Handle(WktEllipsoid ellipsoid)
         {
-            table.Add(new WktToProjRecord(ellipsoid, null));
+            //table.Add(new WktToProjRecord(ellipsoid, null));
+            table[ellipsoid] = null;
         }
 
         /// <summary>
@@ -99,7 +104,8 @@ namespace ProjNet.Wkt
         /// <param name="spheroid"></param>
         public void Handle(WktSpheroid spheroid)
         {
-            table.Add(new WktToProjRecord(spheroid, null));
+            //table.Add(new WktToProjRecord(spheroid, null));
+            table[spheroid] = null;
         }
 
         /// <summary>
@@ -108,7 +114,8 @@ namespace ProjNet.Wkt
         /// <param name="extension"></param>
         public void Handle(WktExtension extension)
         {
-            table.Add(new WktToProjRecord(extension, null));
+            //table.Add(new WktToProjRecord(extension, null));
+            table[extension] = null;
         }
 
         /// <summary>
@@ -123,32 +130,37 @@ namespace ProjNet.Wkt
             var u = new Unit(unit.ConversionFactor, unit.Name, authName, authCode.GetValueOrDefault(),
                 string.Empty, string.Empty, string.Empty);
 
-            table.Add(new WktToProjRecord(unit, u));
+            //table.Add(new WktToProjRecord(unit, u));
+            table[unit] = u;
         }
 
         /// <inheritdoc/>
         public void Handle(WktParameter parameter)
         {
             var p = new ProjectionParameter(parameter.Name, parameter.Value);
-            table.Add(new WktToProjRecord(parameter, p));
+            //table.Add(new WktToProjRecord(parameter, p));
+            table[parameter] = p;
         }
 
         /// <inheritdoc/>
         public void Handle(WktParameterMathTransform pmt)
         {
-            table.Add(new WktToProjRecord(pmt, null));
+            //table.Add(new WktToProjRecord(pmt, null));
+            table[pmt] = null;
         }
 
         /// <inheritdoc/>
         public void Handle(WktPrimeMeridian meridian)
         {
-            table.Add(new WktToProjRecord(meridian, null));
+            //table.Add(new WktToProjRecord(meridian, null));
+            table[meridian] = null;
         }
 
         /// <inheritdoc/>
         public void Handle(WktProjection projection)
         {
-            table.Add(new WktToProjRecord(projection, null));
+            //table.Add(new WktToProjRecord(projection, null));
+            table[projection] = null;
         }
 
         /// <inheritdoc/>
@@ -157,31 +169,36 @@ namespace ProjNet.Wkt
             var wgs84 = new Wgs84ConversionInfo(toWgs84.DxShift, toWgs84.DyShift, toWgs84.DzShift, toWgs84.ExRotation,
                 toWgs84.EyRotation, toWgs84.EzRotation, toWgs84.PpmScaling, toWgs84.Description);
 
-            table.Add(new WktToProjRecord(toWgs84, wgs84));
+            //table.Add(new WktToProjRecord(toWgs84, wgs84));i
+            table[toWgs84] = wgs84;
         }
 
         /// <inheritdoc/>
         public void Handle(WktGeocentricCoordinateSystem cs)
         {
-            table.Add(new WktToProjRecord(cs, null));
+            //table.Add(new WktToProjRecord(cs, null));
+            table[cs] = null;
         }
 
         /// <inheritdoc/>
         public void Handle(WktGeographicCoordinateSystem cs)
         {
-            table.Add(new WktToProjRecord(cs, null));
+            //table.Add(new WktToProjRecord(cs, null));
+            table[cs] = null;
         }
 
         /// <inheritdoc/>
         public void Handle(WktProjectedCoordinateSystem cs)
         {
-            table.Add(new WktToProjRecord(cs, null));
+            //table.Add(new WktToProjRecord(cs, null));
+            table[cs] = null;
         }
 
         /// <inheritdoc/>
         public void Handle(WktFittedCoordinateSystem cs)
         {
-            table.Add(new WktToProjRecord(cs, null));
+            //table.Add(new WktToProjRecord(cs, null));
+            table[cs] = null;
         }
 
 
@@ -205,15 +222,14 @@ namespace ProjNet.Wkt
         private object FindOrCreateProjObject<T>(T wkt)
             where T : IWktObject
         {
-            var item = table.FirstOrDefault(x => x.WktObject.Equals(wkt));
-
-            // Check if wkt object is in table! (Could be Optional)
-            if (item == null)
+            if (wkt == null)
                 return null;
 
+            object item = table[wkt];//.FirstOrDefault(x => x.WktObject.Equals(wkt));
+
             // Check if already exists
-            if (item.ProjObject != null)
-                return item.ProjObject;
+            if (item != null)
+                return item;
 
             // Fill in the gaps where projObject is null;
             // Dispatch to Create methods...
@@ -336,16 +352,16 @@ namespace ProjNet.Wkt
         {
             var pp = new List<ProjectionParameter>();
             // Projection parameters come after Projection in WKT
-            var subTable = table
-                .SkipWhile(x => !(x.WktObject is WktParameter))
-                .TakeWhile(x => x.WktObject is WktParameter)
+            var subTable = table.Keys
+                .SkipWhile(x => !(x is WktParameter))
+                .TakeWhile(x => x is WktParameter)
                 .ToList();
 
             if (subTable.Any())
             {
                 foreach (var item in subTable)
                 {
-                    var p = (ProjectionParameter) FindOrCreateProjObject(item.WktObject);
+                    var p = (ProjectionParameter) FindOrCreateProjObject(item);
                     pp.Add(p);
                 }
             }
@@ -411,8 +427,9 @@ namespace ProjNet.Wkt
 
         private object FillItem(IWktObject wkt, object proj)
         {
-            int idx = table.FindIndex(x => x.WktObject.Equals(wkt));
-            table[idx].ProjObject = proj;
+            //int idx = table.FindIndex(x => x.WktObject.Equals(wkt));
+            //table[idx].ProjObject = proj;
+            table[wkt] = proj;
             return proj;
         }
 
@@ -539,5 +556,12 @@ namespace ProjNet.Wkt
             return null;
         }
 
+
+
+        private AxisOrientationEnum Map(WktAxisDirectionEnum input)
+        {
+            // Numbers are equal so cast must succeed
+            return (AxisOrientationEnum) input;
+        }
     }
 }

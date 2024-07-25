@@ -63,28 +63,6 @@ namespace ProjNet.CoordinateSystems
         /// <returns>The resulting spatial reference object</returns>
         public CoordinateSystem CreateFromWkt(string WKT)
         {
-            using (var stringReader = new StringReader(WKT))
-            using (var wktReader = new WktTextReader(stringReader))
-            {
-                var wktResult = wktReader.ReadToEnd();
-
-                if (wktResult.Success)
-                {
-                    var converter = new WktToProjConverter(this);
-                    return converter.Convert(wktResult.Value);
-                }
-
-                throw new InvalidOperationException(wktResult.Error.RenderErrorMessage());
-            }
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="WKT"></param>
-        /// <returns></returns>
-        public CoordinateSystem CreateFromWktOld(string WKT)
-        {
             var info = CoordinateSystemWktReader.Parse(WKT);
             return info as CoordinateSystem;
         }
