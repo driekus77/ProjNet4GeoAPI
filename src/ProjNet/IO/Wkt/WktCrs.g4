@@ -45,18 +45,23 @@ wkt
     | vertcs
     | geoccs
     | localcs
+    | fittedcs
     ;
 
+fittedcs
+    : 'FITTED_CS' LPAR name COMMA paramsmt COMMA projcs (COMMA authority)? RPAR
+    ;
+ 
+paramsmt
+    : 'PARAM_MT' LPAR name (COMMA parameter)+ RPAR
+    ;
+     
 compdcs
     : 'COMPD_CS' LPAR name COMMA (projcs | geogcs) COMMA vertcs COMMA authority RPAR
     ;
 
 projcs
-    : 'PROJCS' LPAR name COMMA geogcs COMMA projection COMMA (parameter COMMA)+ unit COMMA (
-        extension COMMA
-    )? (
-        axis COMMA
-    )* authority RPAR
+    : 'PROJCS' LPAR name COMMA geogcs COMMA projection COMMA (parameter COMMA)+ unit COMMA ((extension COMMA) | (axis COMMA))* authority RPAR
     ;
 
 geoccs
@@ -76,7 +81,7 @@ localcs
     ;
 
 datum
-    : 'DATUM' LPAR name COMMA spheroid (COMMA towgs84)? (COMMA authority)? RPAR
+    : 'DATUM' LPAR name COMMA spheroid ((COMMA towgs84) | (COMMA authority))* RPAR
     ;
 
 vertdatum
@@ -96,7 +101,7 @@ towgs84
     ;
 
 extension
-    : 'EXTENSION' LPAR name COMMA projtext RPAR {}
+    : 'EXTENSION' LPAR name COMMA projtext RPAR
     ;
     
 authority
